@@ -11,20 +11,29 @@ import monadbayes.sampler.MetropolisHastings
 
 object Example extends App:
 
+    case class Params(a : Double, b : Double, sigma : Double)
     val prior = for
-        x <- Primitive(Normal(0, 3))
-        y <- Primitive(Normal(x, 1))
-    yield (x, y)
+        a <- Normal(0, 3)
+        b <- Normal(0, 1)
+        sigma <- Gamma(1, 1)
+    yield Params(a, b, sigma)
 
-    val posterior = prior.condition((x, y) => if (x > 0) then Prob(1.0) else Prob(1e-10))    
-    val samples = posterior.run(MetropolisHastings(100, initialSample = (0.1, 0.0)))
+    // training data
+    val data = Seq((1.0, 1.1), (2.0, 1.9), (3.0, 3.0))
 
-    println(samples.length)
-    val columnData = Map("x" -> samples.map(_._1), "y" -> samples.map(_._2))
+    def addDataPoint(dist : Dist[Params], x : Double, y : Double): Dist[Params] =
+        dist.condition(params => Normal(params.a * x + params.b, params.sigma).pdf(y))
+
+    val model = data.foldLeft[Dist[Params]](prior)((dist, point) => addDataPoint(dist, point._1, point._2))
+
+    val samples = model.run(MetropolisHastings(initialSample = Params(0, 0, 1))).drop(1000).take(10000).toSeq
+    
+    // plot a histogram of the marginal distribution of a
+    val columnData = Map("a" -> samples.map(_.a))
     Chart(columnData).encode(
-      Channel.X("x", FieldType.Quantitative),
-      Channel.Y("y", FieldType.Quantitative)
-    ).markCircle()    
+      Channel.X("a", FieldType.Quantitative).binned(),
+      Channel.Y("a", FieldType.Quantitative).count()
+    ).markBar()    
     .show()
 
     
