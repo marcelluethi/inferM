@@ -4,12 +4,17 @@ opaque type Prob = Double
 object Prob:
     def apply(value : Double) : Prob = value
 
+extension (p : Prob)
+    def toDouble : Double = p
+    def *(p2 : Prob) : Prob = p * p2
+
 trait Dist[A]:
     def run[X](interpreter: DistInterpreter[A, X]): X
 
     def map[B](f: A => B): Dist[B] = flatMap(a => Pure(f(a)))
     def flatMap[B](f: A => Dist[B]): Dist[B] = Bind(this, f)
     
+    def condition(lik : A => Prob) : Dist[A] = Conditional(lik, this)
         
 trait DistInterpreter[A, X]:
     def pure(value : A) : X
