@@ -2,6 +2,7 @@ package monadbayes
 
 import breeze.stats.distributions.Rand.FixedSeed.randBasis
 import breeze.stats.{distributions => bdist}
+import breeze.stats.distributions.Bernoulli
 
 /**
   * A distribution that can be sampled from
@@ -40,3 +41,9 @@ case class Gamma(shape: Double, scale: Double) extends PrimitiveDist[Double]:
     def sample(): Double = gamma.draw()
     def logPdf(a: Double): Prob = Prob(gamma.logPdf(a))
     def pdf(a: Double): Prob = Prob(gamma.pdf(a))
+
+case class Bernoulli(p: Double) extends PrimitiveDist[Boolean]:
+    val bernoulli = bdist.Bernoulli(p)
+    def sample(): Boolean = bernoulli.draw()
+    def logPdf(a: Boolean): Prob = Prob(bernoulli.logProbabilityOf(a))
+    def pdf(a: Boolean): Prob = Prob(bernoulli.probabilityOf(a))
