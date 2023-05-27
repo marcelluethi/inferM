@@ -1,15 +1,13 @@
-package monadbayes
+package monadbayes.examples
 
 
 import scaltair.*
 import scaltair.PlotTargetBrowser.given
 
-import sampler.PriorSampler
-import monadbayes.sampler.PriorSampler
-import monadbayes.sampler.PriorWeightedSampler
-import monadbayes.sampler.MetropolisHastings
+import monadbayes.*
+import monadbayes.sampler.* 
 
-object Example extends App:
+object LinearRegression extends App:
 
     case class Params(a : Double, b : Double, sigma : Double)
     val prior = for
