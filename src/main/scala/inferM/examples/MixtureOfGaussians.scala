@@ -15,7 +15,7 @@ object MixtureOfGaussians extends App:
   val model = prior.condition(x => Normal(x, 2.0).logPdf(1.0))
 
   val samples = model
-    .run(MetropolisHastings(initialSample = 0))
+    .run(MetropolisHastings())
     .drop(1000)
     .take(10000)
     .toSeq

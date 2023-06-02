@@ -42,3 +42,7 @@ case class Bernoulli(p: Double) extends PrimitiveDist[Boolean]:
   val bernoulli = bdist.Bernoulli(p)
   def sample(): Boolean = bernoulli.draw()
   def logPdf(a: Boolean): LogProb = LogProb(bernoulli.logProbabilityOf(a))
+
+
+  
+  

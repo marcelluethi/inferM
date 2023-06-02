@@ -2,12 +2,12 @@ package inferM.sampler
 
 import inferM.*
 
-class MetropolisHastings[A](initialSample: A)
+class MetropolisHastings[A]()
     extends DistInterpreter[A, Iterator[A]]:
 
-  override def pure(value: A): Iterator[A] = mh(Pure(value))
+  override def pure(value: A): Iterator[A] = MetropolisHastings.mh(Pure(value))
 
-  override def primitive(dist: PrimitiveDist[A]): Iterator[A] = mh(
+  override def primitive(dist: PrimitiveDist[A]): Iterator[A] = MetropolisHastings.mh(
     Primitive(dist)
   )
 
@@ -15,13 +15,16 @@ class MetropolisHastings[A](initialSample: A)
       logLikelihood: A => LogProb,
       dist: Dist[A]
   ): Iterator[A] =
-    mh(Conditional(logLikelihood, dist))
+    MetropolisHastings.mh(Conditional(logLikelihood, dist))
 
-  override def bind[B](dist: Dist[B], bind: B => Dist[A]): Iterator[A] = mh(
+  override def bind[B](dist: Dist[B], bind: B => Dist[A]): Iterator[A] = 
+    MetropolisHastings.mh(
     Bind(dist, bind)
   )
 
-  def mh(dist: Dist[A]): Iterator[A] =
+object MetropolisHastings:
+  def mh[A](dist: Dist[A]): Iterator[A] =
+    val initialSample = dist.sample()
     val proposals = dist.run(PriorWeightedSampler())
     val proposalIt = Iterator.continually(proposals.sample())
 

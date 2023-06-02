@@ -28,7 +28,7 @@ object LinearRegression extends App:
   )
 
   val samples = model
-    .run(MetropolisHastings(initialSample = Params(0, 0, 1)))
+    .run(MetropolisHastings())
     .drop(1000)
     .take(10000)
     .toSeq

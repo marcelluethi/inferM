@@ -3,12 +3,13 @@ package inferM
 opaque type LogProb = Double
 object LogProb:
   def apply(value: Double): LogProb = value
+  def MinValue : LogProb = Double.MinValue
 
 extension (p: LogProb)
   def toDouble: Double = p
   def +(p2: LogProb): LogProb = p + p2
   def toProb: Double = math.exp(p)
-
+ 
 trait Dist[A]:
   def run[X](interpreter: DistInterpreter[A, X]): X
 
