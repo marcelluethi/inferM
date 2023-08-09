@@ -1,6 +1,6 @@
 ThisBuild / organization := "ch.unibas.cs.gravis"
 ThisBuild / version := "0.1-SNAPSHOT"
-ThisBuild / scalaVersion := "3.2.0"
+ThisBuild / scalaVersion := "3.3.0"
 
 ThisBuild / homepage := Some(url("https://github.com/marcelluethi/inferM"))
 ThisBuild / licenses += ("Apache-2.0", url(
@@ -50,7 +50,10 @@ lazy val root = (project in file("."))
     libraryDependencies ++= Seq(
       ("org.scalanlp" %% "breeze" % "2.1.0"),
       ("org.scalanlp" %% "breeze-natives" % "2.1.0"),
-      ("ch.unibas.cs.gravis" %% "scaltair" % "0.1-SNAPSHOT"),
+      ("ch.unibas.cs.gravis" %% "scaltair" % "0.2-SNAPSHOT"),
+      ("ch.benikm91"  %%  "scala-grad" % "0.0.1"),
+      ("ch.benikm91"  %%  "scala-grad-api" %"0.0.1"),
+      ("ch.benikm91"  %%   "scala-grad-auto-breeze" % "0.0.1"),
       "org.scalameta" %% "munit" % "0.7.29" % Test
     )
   )

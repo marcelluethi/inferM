@@ -1,44 +1,57 @@
 package inferM.examples
 
-import scaltair.*
-import scaltair.PlotTargetBrowser.given
-
 import inferM.*
+import inferM.dists.*
 import inferM.sampler.*
+
+
+import scalagrad.api.matrixalgebra.MatrixAlgebraT
+import scalagrad.api.spire.trig.DualScalarIsTrig.given
+import spire.implicits.DoubleAlgebra 
+import spire.algebra.Trig
+import breeze.stats.{distributions => bdists}
+import breeze.stats.distributions.Rand.FixedSeed.randBasis
+
+
+import scalagrad.api.ScalaGrad
+import scalagrad.auto.forward.breeze.DeriverBreezeDoubleForwardPlan
+import scalagrad.auto.forward.breeze.DeriverBreezeDoubleForwardPlan.given
+import DeriverBreezeDoubleForwardPlan.{algebraT as alg}
 
 object LinearRegression extends App:
 
-  case class Params(a: Double, b: Double, sigma: Double)
-  val prior = for
-    a <- Normal(0, 3)
-    b <- Normal(0, 1)
-    sigma <- Gamma(1, 1)
-  yield Params(a, b, sigma)
+  
 
-  // training data
-  val data = Seq((1.0, 1.1), (2.0, 1.9), (3.0, 3.0))
+  // example data
+  val aGroundTruth = 3.0
+  val bGroundTruth = 10.0
+  val noiseSigma = 1.0
 
-  def addDataPoint(dist: Dist[Params], x: Double, y: Double): Dist[Params] =
-    dist.condition(params =>
-      Normal(params.a * x + params.b, params.sigma).logPdf(y)
-    )
-
-  val model = data.foldLeft[Dist[Params]](prior)((dist, point) =>
-    addDataPoint(dist, point._1, point._2)
+  val data = Seq.range(0, 10).map(x => 
+    (x.toDouble, aGroundTruth * x + bGroundTruth + bdists.Gaussian(0.0, noiseSigma).sample())
   )
 
-  val samples = model
-    .run(MetropolisHastings())
-    .drop(1000)
-    .take(10000)
-    .toSeq
+  // defining the regression model 
+  val prior = for  
+    a <- RV.fromPrimitive(Gaussian(alg.liftToScalar(1.0), alg.liftToScalar(10)), "a")
+    b <- RV.fromPrimitive(Gaussian(alg.liftToScalar(2.0), alg.liftToScalar(10)), "b")
+  yield (a, b)
 
-  // plot a histogram of the marginal distribution of a
-  val columnData = Map("a" -> samples.map(_.a))
-  Chart(columnData)
-    .encode(
-      Channel.X("a", FieldType.Quantitative).binned(),
-      Channel.Y("a", FieldType.Quantitative).count()
-    )
-    .markBar()
-    .show()
+  def addPoint(x : Double, y : Double)(prior : RV[(Double, Double)])(using trig: Trig[alg.Scalar]) : RV[(Double, Double)] = 
+    prior.condition((a, b) => 
+      Gaussian(alg.liftToScalar(a)  * alg.liftToScalar(x) +alg.liftToScalar(b), alg.liftToScalar(1.0)).logPdf(alg.liftToScalar(y)))
+  
+  val posterior = data.foldLeft(prior)((prior, point) => addPoint(point._1, point._2)(prior))
+
+  // Sampling
+  val hmc = HMC[(Double, Double)](
+    initialValue = Map("a" -> 0.0, "b" -> 0.0),
+    epsilon = 0.5,
+    numLeapfrog = 20
+  )
+
+  val samples = posterior.sample(hmc).take(10000).toSeq
+
+  println("mean a: " +samples.map(_._1).sum / samples.size)
+  println("mean b: " +samples.map(_._2).sum / samples.size)
+
