@@ -5,22 +5,17 @@ import inferM.dists.*
 import inferM.sampler.*
 
 
-import scalagrad.api.matrixalgebra.MatrixAlgebraT
 import scalagrad.api.spire.trig.DualScalarIsTrig.given
 import spire.implicits.DoubleAlgebra 
-import spire.algebra.Trig
+
 import breeze.stats.{distributions => bdists}
 import breeze.stats.distributions.Rand.FixedSeed.randBasis
 
-
-import scalagrad.api.ScalaGrad
 import scalagrad.auto.forward.breeze.DeriverBreezeDoubleForwardPlan
 import scalagrad.auto.forward.breeze.DeriverBreezeDoubleForwardPlan.given
 import DeriverBreezeDoubleForwardPlan.{algebraT as alg}
 
-object LinearRegression extends App:
-
-  
+object LinearRegression extends App:  
 
   // example data
   val aGroundTruth = 3.0
@@ -37,7 +32,7 @@ object LinearRegression extends App:
     b <- RV.fromPrimitive(Gaussian(alg.liftToScalar(2.0), alg.liftToScalar(10)), "b")
   yield (a, b)
 
-  def addPoint(x : Double, y : Double)(prior : RV[(Double, Double)])(using trig: Trig[alg.Scalar]) : RV[(Double, Double)] = 
+  def addPoint(x : Double, y : Double)(prior : RV[(Double, Double)]) : RV[(Double, Double)] = 
     prior.condition((a, b) => 
       Gaussian(alg.liftToScalar(a)  * alg.liftToScalar(x) +alg.liftToScalar(b), alg.liftToScalar(1.0)).logPdf(alg.liftToScalar(y)))
   

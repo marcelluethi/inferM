@@ -1,33 +1,15 @@
 package inferM
 
-import scalagrad.api.matrixalgebra.MatrixAlgebraT
-import spire.implicits.DoubleAlgebra 
 import breeze.stats.{distributions => bdists}
 import breeze.stats.distributions.Rand.FixedSeed.randBasis
 
-
 import scalagrad.api.ScalaGrad
-import scalagrad.auto.forward.breeze.DeriverBreezeDoubleForwardPlan
+import scalagrad.auto.forward.breeze.DeriverBreezeDoubleForwardPlan.{algebraT as alg}
 import scalagrad.auto.forward.breeze.DeriverBreezeDoubleForwardPlan.given
-import DeriverBreezeDoubleForwardPlan.{algebraT as alg}
 
 type Latent = Map[String, alg.Scalar]
 
 class RV[A](val value : Latent => A, val density : Latent => alg.Scalar):
-
-
-  /**
-    * Given values for the parameters (as a Map), the function returns 
-    * a Map with the same keys, but with the values replaced by the gradient
-    */
-  def gradDensity : (params : Latent) => Map[String, Double] = params =>
-
-    params.map((name, _) => 
-      val grad = ScalaGrad.derive((s : alg.Scalar) => density(params.updated(name, s)))
-      val pointToEvalute = params(name)
-      (name, grad(pointToEvalute.toDouble))
-    )          
-    
 
   def sample(sampler : Sampler[A]) : Iterator[A] = 
     sampler.sample(this)

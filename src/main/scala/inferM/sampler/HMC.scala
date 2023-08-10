@@ -5,20 +5,33 @@ import inferM.*
 
 import breeze.stats.{distributions => bdists}
 import scalagrad.api.ScalaGrad
-import scalagrad.auto.forward.breeze.DeriverBreezeDoubleForwardPlan
+import scalagrad.auto.forward.breeze.DeriverBreezeDoubleForwardPlan.{algebraT as alg}
 import scalagrad.auto.forward.breeze.DeriverBreezeDoubleForwardPlan.given
-import DeriverBreezeDoubleForwardPlan.{algebraT as alg}
+
 
 class HMC[A](initialValue : Map[String, Double], epsilon : Double, numLeapfrog : Int)(using rng : breeze.stats.distributions.RandBasis) extends Sampler[A]:
-  def sample(rv : RV[A]) : Iterator[A] = 
+
+  /**
+    * Given values for the parameters (as a Map), the function returns 
+    * a Map with the same keys, but with the values replaced by the gradient
+    */
+  def gradDensity(rv : RV[A]) : (params : Latent) => Map[String, Double] = params =>
+
+    params.map((name, _) => 
+      val grad = ScalaGrad.derive((s : alg.Scalar) => rv.density(params.updated(name, s)))
+      val pointToEvalute = params(name)
+      (name, grad(pointToEvalute.toDouble))
+    )          
     
 
+  def sample(rv : RV[A]) : Iterator[A] = 
+    
     def U = (params : Map[String, Double]) => 
       -rv.density(params.map((name, value) => (name, alg.liftToScalar(value)))).toDouble
     
     def gradU(current : Map[String, Double]) : Map[String, Double] = 
       val liftedArg = current.map((name, value) => (name, alg.liftToScalar( - value))) // ! see the minus sign here
-      rv.gradDensity(liftedArg).map((name, value) => (name, value.toDouble))
+      gradDensity(rv)(liftedArg).map((name, value) => (name, value.toDouble))
 
     def oneStep(currentQ : Map[String, Double]) : Map[String, Double] =       
       

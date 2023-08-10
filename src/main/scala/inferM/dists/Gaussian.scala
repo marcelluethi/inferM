@@ -10,15 +10,14 @@ import spire.algebra.Trig
 import breeze.stats.{distributions => bdists}
 import breeze.stats.distributions.Rand.FixedSeed.randBasis
 
-import scalagrad.api.ScalaGrad
-import scalagrad.auto.forward.breeze.DeriverBreezeDoubleForwardPlan
-import DeriverBreezeDoubleForwardPlan.{algebraT as alg}
+import scalagrad.auto.forward.breeze.DeriverBreezeDoubleForwardPlan.{algebraT as alg}
+import scalagrad.auto.forward.breeze.DeriverBreezeDoubleForwardPlan.given
 
-class Gaussian(mu : alg.Scalar, sdev : alg.Scalar)(using trig: Trig[alg.Scalar]) extends Dist:
+class Gaussian(mu : alg.Scalar, sdev : alg.Scalar) extends Dist:
   
   def logPdf(x : alg.Scalar): alg.Scalar = 
     import alg.* 
-    
+    val trig = summon[Trig[alg.Scalar]]
     val PI = alg.liftToScalar(Math.PI)
     val logSqrt2Pi = alg.liftToScalar(.5) * trig.log(alg.liftToScalar(2.0) * PI)
     val logSdev = trig.log(sdev)
