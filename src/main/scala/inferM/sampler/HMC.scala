@@ -7,27 +7,35 @@ import breeze.stats.{distributions => bdists}
 import scalagrad.api.ScalaGrad
 import scalagrad.auto.forward.breeze.DeriverBreezeDoubleForwardPlan.{algebraT as alg}
 import scalagrad.auto.forward.breeze.DeriverBreezeDoubleForwardPlan.given
+import inferM.RV.LatentSample
 
-
+/**
+  * Implementation of Hamiltonian Monte Carlo
+  *
+  * @param initialValue
+  * @param epsilon
+  * @param numLeapfrog
+  * @param rng
+  */
 class HMC[A](initialValue : Map[String, Double], epsilon : Double, numLeapfrog : Int)(using rng : breeze.stats.distributions.RandBasis) extends Sampler[A]:
 
   /**
     * Given values for the parameters (as a Map), the function returns 
     * a Map with the same keys, but with the values replaced by the gradient
     */
-  def gradDensity(rv : RV[A]) : (params : Latent) => Map[String, Double] = params =>
+  def gradDensity(rv : RV[A]) : (latent : LatentSample) => Map[String, Double] = latentSample =>
 
-    params.map((name, _) => 
-      val grad = ScalaGrad.derive((s : alg.Scalar) => rv.density(params.updated(name, s)))
-      val pointToEvalute = params(name)
+    latentSample.map((name, _) => 
+      val grad = ScalaGrad.derive((s : alg.Scalar) => rv.logDensity(latentSample.updated(name, s)))
+      val pointToEvalute = latentSample(name)
       (name, grad(pointToEvalute.toDouble))
     )          
     
 
   def sample(rv : RV[A]) : Iterator[A] = 
     
-    def U = (params : Map[String, Double]) => 
-      -rv.density(params.map((name, value) => (name, alg.liftToScalar(value)))).toDouble
+    def U = (latentSample : Map[String, Double]) => 
+      -rv.logDensity(latentSample.map((name, value) => (name, alg.liftToScalar(value)))).toDouble
     
     def gradU(current : Map[String, Double]) : Map[String, Double] = 
       val liftedArg = current.map((name, value) => (name, alg.liftToScalar( - value))) // ! see the minus sign here

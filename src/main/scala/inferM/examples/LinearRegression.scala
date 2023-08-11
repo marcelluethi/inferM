@@ -36,7 +36,14 @@ object LinearRegression extends App:
     prior.condition((a, b) => 
       Gaussian(alg.liftToScalar(a)  * alg.liftToScalar(x) +alg.liftToScalar(b), alg.liftToScalar(1.0)).logPdf(alg.liftToScalar(y)))
   
+  val likelihoods= data.map(point => (ab : Tuple2[Double, Double]) =>     
+    val (a, b) = ab
+    Gaussian(alg.liftToScalar(a)  * alg.liftToScalar(point._1) +alg.liftToScalar(b), alg.liftToScalar(1.0)).logPdf(alg.liftToScalar(point._2))
+  )
+  
+
   val posterior = data.foldLeft(prior)((prior, point) => addPoint(point._1, point._2)(prior))
+  val posterior2 = prior.conditionAll(likelihoods)
 
   // Sampling
   val hmc = HMC[(Double, Double)](
@@ -45,7 +52,7 @@ object LinearRegression extends App:
     numLeapfrog = 20
   )
 
-  val samples = posterior.sample(hmc).take(10000).toSeq
+  val samples = posterior.sample(hmc).take(100000).toSeq
 
   println("mean a: " +samples.map(_._1).sum / samples.size)
   println("mean b: " +samples.map(_._2).sum / samples.size)

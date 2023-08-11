@@ -1,20 +1,25 @@
 package inferM.sampler
 
 import inferM.* 
+import inferM.RV.LatentSampleDouble
 import scalagrad.auto.forward.breeze.DeriverBreezeDoubleForwardPlan
 import scalagrad.auto.forward.breeze.DeriverBreezeDoubleForwardPlan.given
 import DeriverBreezeDoubleForwardPlan.{algebraT as alg}
 
-class MetropolisHastings[A](initialValue : Map[String, Double], proposal : Map[String, Double] => Map[String, Double])(using rng : breeze.stats.distributions.RandBasis) extends Sampler[A]:
+/**
+  * Implementation of the Metropolis Hastings algorithm
+  *
+  */
+class MetropolisHastings[A](initialValue : LatentSampleDouble, proposal :LatentSampleDouble => LatentSampleDouble)(using rng : breeze.stats.distributions.RandBasis) extends Sampler[A]:
   def sample(rv : RV[A]) : Iterator[A] = 
     
     def oneStep(
-        currentSample: Map[String, Double],
-        newProposal: Map[String, Double]
-    ):  Map[String, Double] =
+        currentSample: LatentSampleDouble,
+        newProposal:LatentSampleDouble
+    ): LatentSampleDouble =
 
-      val currentP = rv.density(currentSample.map((name, value) => (name, alg.liftToScalar(value))))
-      val newP = rv.density(newProposal.map((name, value) => (name, alg.liftToScalar(value))))
+      val currentP = rv.logDensity(currentSample.map((name, value) => (name, alg.liftToScalar(value))))
+      val newP = rv.logDensity(newProposal.map((name, value) => (name, alg.liftToScalar(value))))
       val a = newP - currentP
       val r = rng.uniform.draw()
 
