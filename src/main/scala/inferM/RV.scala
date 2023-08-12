@@ -44,17 +44,6 @@ class RV[S] private (val value : LatentSample => S, val logDensity : LatentSampl
     latentSample => value(latentSample),
     latentSample => logDensity(latentSample) + likelihood(value(latentSample))
   )
-
-  /**
-   * Create a new random variable (the posterior), using the current one as a prior and the given likelihood functions as conditional distributions. 
-   * The conditional distributions defining the likelihood are assumed to be independent, such that they can be applied 
-   * in any order and the resulting log densities can be summed. 
-   */
-  def conditionAll(likelihoods : Seq[S => alg.Scalar]) : RV[S] = 
-    RV(
-    latentSample => value(latentSample),
-    latentSample => logDensity(latentSample) + likelihoods.foldLeft(alg.zeroScalar)((sum, likelihood) => sum + likelihood(value(latentSample)))
-  )
   
 
 object RV:
