@@ -35,11 +35,12 @@ class HMC[A](initialValue : Map[String, Double], epsilon : Double, numLeapfrog :
   def sample(rv : RV[A]) : Iterator[A] = 
     
     def U = (latentSample : Map[String, Double]) => 
-      -rv.logDensity(latentSample.map((name, value) => (name, alg.liftToScalar(value)))).toDouble
+      - rv.logDensity(latentSample.map((name, value) => (name, alg.liftToScalar(value)))).toDouble
     
     def gradU(current : Map[String, Double]) : Map[String, Double] = 
-      val liftedArg = current.map((name, value) => (name, alg.liftToScalar( - value))) // ! see the minus sign here
+      val liftedArg = current.map((name, value) => (name, alg.liftToScalar( value))) 
       gradDensity(rv)(liftedArg).map((name, value) => (name, value.toDouble))
+      .map((name, value) => (name, -value)) // make it negative as U is also negative (see above)
 
     def oneStep(currentQ : Map[String, Double]) : Map[String, Double] =       
       
