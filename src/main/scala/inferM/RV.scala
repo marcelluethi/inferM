@@ -67,5 +67,5 @@ object RV:
   /**
     * Creates a random variable from a primitive distribution (I.e. one whose density function is known analytically)
     */
-  def fromPrimitive(p : Dist, name : String) : RV[Double] =  
-      RV( value => value(name).toDouble, params => p.logPdf(params(name)))
+  def fromPrimitive(p : Dist[Double], name : String) : RV[Double] =  
+      RV( value => value(name).toDouble, params => p.logPdf(params(name).value))

@@ -39,8 +39,8 @@ object LinearRegression extends App:
       val (x, y) = point 
       sum + Gaussian(
         alg.liftToScalar(parameters.a)  * alg.liftToScalar(x) +alg.liftToScalar(parameters.b), 
-        alg.liftToScalar(1.0)).logPdf(alg.liftToScalar(y)
-      )
+        alg.liftToScalar(1.0)
+      ).logPdf(y)
     )
 
   val posterior = prior.condition(likelihood)
