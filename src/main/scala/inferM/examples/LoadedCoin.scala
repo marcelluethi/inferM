@@ -15,7 +15,7 @@ import scalagrad.auto.forward.breeze.DeriverBreezeDoubleForwardPlan
 import scalagrad.auto.forward.breeze.DeriverBreezeDoubleForwardPlan.given
 import DeriverBreezeDoubleForwardPlan.{algebraT as alg}
 
-object BiasCoin extends App:  
+object LoadedCoin extends App:  
 
   // example data
   val pGroundTruth = 0.1
