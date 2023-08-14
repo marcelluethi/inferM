@@ -22,7 +22,7 @@ class Gaussian(mu : alg.Scalar, sdev : alg.Scalar) extends Dist[Double]:
   def logPdf(x : Double): alg.Scalar = 
     import alg.* 
     val trig = summon[Trig[alg.Scalar]]
-    val PI = alg.liftToScalar(Math.PI)
+    val PI = alg.lift(Math.PI)
     val logSqrt2Pi = alg.liftToScalar(.5) * trig.log(alg.liftToScalar(2.0) * PI)
     val logSdev = trig.log(sdev)
     val a = (alg.liftToScalar(x) - mu) / sdev
@@ -39,12 +39,15 @@ class MultivariateGaussian(mean : alg.ColumnVector, cov : alg.Matrix)  extends D
     import alg.*
     val trig = summon[Trig[alg.Scalar]]
     val nroot = summon[NRoot[alg.Scalar]]
-    val centered = alg.createColumnVectorFromElements(x.toArray.map(alg.liftToScalar)) - mean
+
+    val centered = alg.lift(x) - mean
     val precision = cov.inv
 
-    val sqrtDet : alg.Scalar = alg.liftToScalar(1.0) / nroot.sqrt(cov.det)
-    val logNormalizer = trig.log(alg.liftToScalar(Math.pow(Math.PI * 2, - mean.length / 2)) * sqrtDet)
-    centered.t * (precision * centered) * alg.liftToScalar(- 0.5) - logNormalizer
+    val k = mean.length
+        
+    val logNormalizer = trig.log(alg.lift(Math.pow(Math.PI * 2, -k  / 2.0)) * alg.lift(1.0) / nroot.sqrt(cov.det))
+    
+    alg.lift(- 0.5) * centered.t * (precision * centered)  + logNormalizer
 
 
   def draw() : DenseVector[Double] = 
