@@ -1,8 +1,8 @@
 package inferM
 
 
-import scalagrad.auto.forward.breeze.DeriverBreezeDoubleForwardPlan
-import DeriverBreezeDoubleForwardPlan.{algebraT as alg}
+import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode
+import BreezeDoubleForwardMode.{algebraT as alg}
 
 
 /** 

@@ -4,9 +4,10 @@ import breeze.stats.{distributions => bdists}
 import breeze.stats.distributions.Rand.FixedSeed.randBasis
 
 import scalagrad.api.ScalaGrad
-import scalagrad.auto.forward.breeze.DeriverBreezeDoubleForwardPlan.{algebraT as alg}
-import scalagrad.auto.forward.breeze.DeriverBreezeDoubleForwardPlan.given
+import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.{algebraT as alg}
+import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
 import inferM.RV.LatentSample
+import breeze.linalg.DenseVector
 
 /**
   * A random variable, described by the logDensity function, from which samples of type S can be drawn. 
@@ -57,15 +58,21 @@ object RV:
     * makes it possible to give each variable a name and to refer to it by name, when we for example 
     * need to pass initial values to a sampler. 
     */
-  type LatentSample = Map[String, alg.Scalar]
+  type LatentSample = Map[String, alg.Scalar | alg.ColumnVector]
 
   /**
     * Same as latent sample, but used when no automatic differentiation is needed
     */
-  type LatentSampleDouble = Map[String, Double]
+  type LatentSampleDouble = Map[String, Double | DenseVector[Double]]
 
   /**
     * Creates a random variable from a primitive distribution (I.e. one whose density function is known analytically)
     */
   def fromPrimitive(p : Dist[Double], name : String) : RV[Double] =  
-      RV( value => value(name).toDouble, params => p.logPdf(params(name).value))
+      RV( value => value(name).asInstanceOf[alg.Scalar].value, params => p.logPdf(params(name).asInstanceOf[alg.Scalar].value))
+
+  /**
+    * Creates a random variable from a primitive distribution (I.e. one whose density function is known analytically)
+    */
+  def fromPrimitiveMultivariate(p : Dist[DenseVector[Double]], name : String) : RV[DenseVector[Double]] =  
+      RV( value => value(name).asInstanceOf[alg.ColumnVector].value, params => p.logPdf(params(name).asInstanceOf[alg.ColumnVector].value))
