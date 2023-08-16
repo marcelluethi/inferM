@@ -26,20 +26,21 @@ object LinearRegression extends App:
     (x.toDouble, aGroundTruth * x + bGroundTruth + bdists.Gaussian(0.0, noiseSigma).sample())
   )
 
-  case class Parameters(a : Double, b : Double)
+  case class Parameters(a : Double, b : Double, sigma : Double)
 
   val prior = for  
-    a <- RV.fromPrimitive(Gaussian(alg.liftToScalar(1.0), alg.liftToScalar(10)), "a")
-    b <- RV.fromPrimitive(Gaussian(alg.liftToScalar(2.0), alg.liftToScalar(10)), "b")
-  yield Parameters(a, b)
+    a <- RV.fromPrimitive(Gaussian(alg.lift(1.0), alg.lift(10)), "a")
+    b <- RV.fromPrimitive(Gaussian(alg.lift(2.0), alg.lift(10)), "b")
+    sigma <- RV.fromPrimitive(Exponential(alg.lift(1.0)), "sigma")
+  yield Parameters(a, b, sigma)
 
   
   val likelihood =  (parameters : Parameters) => 
     data.foldLeft(alg.zeroScalar)((sum, point) =>
       val (x, y) = point 
       sum + Gaussian(
-        alg.liftToScalar(parameters.a)  * alg.liftToScalar(x) +alg.liftToScalar(parameters.b), 
-        alg.liftToScalar(1.0)
+        alg.lift(parameters.a)  * alg.lift(x) +alg.lift(parameters.b), 
+        alg.lift(parameters.sigma)
       ).logPdf(y)
     )
 
@@ -47,13 +48,14 @@ object LinearRegression extends App:
 
   // Sampling
   val hmc = HMC[Parameters](
-    initialValue = Map("a" -> 0.0, "b" -> 0.0),
+    initialValue = Map("a" -> 0.0, "b" -> 0.0, "sigma" -> 1.0),
     epsilon = 0.5,
     numLeapfrog = 20
   )
 
-  val samples = posterior.sample(hmc).take(10000).toSeq
+  val samples = posterior.sample(hmc).drop(10000).take(10000).toSeq
 
   println("mean a: " +samples.map(_._1).sum / samples.size)
   println("mean b: " +samples.map(_._2).sum / samples.size)
+  println("mean sigma: " +samples.map(_._3).sum / samples.size)
 
