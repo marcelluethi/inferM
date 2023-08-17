@@ -28,12 +28,12 @@ object DensityEstimationMultiVariate extends App:
   case class Parameters(mu : DenseVector[Double], sigma2 : Double)
 
   val prior = for  
-    mu <- RV.fromPrimitiveMultivariate(
+    mu <- RV.fromMultivariateDist(
       MultivariateGaussian(
         alg.lift(DenseVector.ones[Double](2)), 
         alg.lift(DenseMatrix.eye[Double](2) * 1.0)
       ), "mean")
-    sigma2 <- RV.fromPrimitive(Exponential(alg.lift(0.1)), "sigma2")    
+    sigma2 <- RV.fromUnivariateDist(Exponential(alg.lift(0.1)), "sigma2")    
   yield Parameters(mu, sigma2)
 
   

@@ -29,9 +29,9 @@ object LinearRegression extends App:
   case class Parameters(a : Double, b : Double, sigma : Double)
 
   val prior = for  
-    a <- RV.fromPrimitive(Gaussian(alg.lift(1.0), alg.lift(10)), "a")
-    b <- RV.fromPrimitive(Gaussian(alg.lift(2.0), alg.lift(10)), "b")
-    sigma <- RV.fromPrimitive(Exponential(alg.lift(1.0)), "sigma")
+    a <- RV.fromUnivariateDist(Gaussian(alg.lift(1.0), alg.lift(10)), "a")
+    b <- RV.fromUnivariateDist(Gaussian(alg.lift(2.0), alg.lift(10)), "b")
+    sigma <- RV.fromUnivariateDist(Exponential(alg.lift(1.0)), "sigma")
   yield Parameters(a, b, sigma)
 
   

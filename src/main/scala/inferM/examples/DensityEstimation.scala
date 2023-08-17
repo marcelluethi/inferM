@@ -26,8 +26,8 @@ object DensityEstimation extends App:
   case class Parameters(mu : Double, sigma : Double)
 
   val prior = for  
-    mu <- RV.fromPrimitive(Gaussian(alg.liftToScalar(0.0), alg.liftToScalar(10)), "mu")
-    sigma <- RV.fromPrimitive(Gaussian(alg.liftToScalar(1.0), alg.liftToScalar(1.0)), "sigma")
+    mu <- RV.fromUnivariateDist(Gaussian(alg.liftToScalar(0.0), alg.liftToScalar(10)), "mu")
+    sigma <- RV.fromUnivariateDist(Gaussian(alg.liftToScalar(1.0), alg.liftToScalar(1.0)), "sigma")
   yield Parameters(mu, sigma)
 
   

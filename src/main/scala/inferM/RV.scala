@@ -68,11 +68,11 @@ object RV:
   /**
     * Creates a random variable from a primitive distribution (I.e. one whose density function is known analytically)
     */
-  def fromPrimitive(p : Dist[Double], name : String) : RV[Double] =  
+  def fromUnivariateDist(p : Dist[Double], name : String) : RV[Double] =  
       RV( value => value(name).asInstanceOf[alg.Scalar].value, params => p.logPdf(params(name).asInstanceOf[alg.Scalar].value))
 
   /**
     * Creates a random variable from a primitive distribution (I.e. one whose density function is known analytically)
     */
-  def fromPrimitiveMultivariate(p : Dist[DenseVector[Double]], name : String) : RV[DenseVector[Double]] =  
+  def fromMultivariateDist(p : Dist[DenseVector[Double]], name : String) : RV[DenseVector[Double]] =  
       RV( value => value(name).asInstanceOf[alg.ColumnVector].value, params => p.logPdf(params(name).asInstanceOf[alg.ColumnVector].value))

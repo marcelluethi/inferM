@@ -22,7 +22,7 @@ object LoadedCoin extends App:
   val data = bdists.Bernoulli(pGroundTruth).sample(100)
 
   val prior = for  
-    p <- RV.fromPrimitive(Uniform(alg.liftToScalar(0.0), alg.liftToScalar(1.0)), "p")
+    p <- RV.fromUnivariateDist(Uniform(alg.liftToScalar(0.0), alg.liftToScalar(1.0)), "p")
   yield p
 
   
