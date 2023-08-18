@@ -13,9 +13,9 @@ import breeze.stats.distributions.Rand.FixedSeed.randBasis
 import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.{algebraT as alg}
 import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
 
-class Uniform(from : alg.Scalar, to : alg.Scalar) extends Dist[Double]:
+class Uniform(from : alg.Scalar, to : alg.Scalar) extends UvDist[Double]:
   
-  def logPdf(x : Double): alg.Scalar = 
+  def logPdf(x : alg.Scalar): alg.Scalar = 
     import alg.* 
     alg.liftToScalar(1.0) / (to - from)
   

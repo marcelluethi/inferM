@@ -26,8 +26,8 @@ object DensityEstimation extends App:
   case class Parameters(mu : Double, sigma : Double)
 
   val prior = for  
-    mu <- RV.fromUnivariateDist(Gaussian(alg.liftToScalar(0.0), alg.liftToScalar(10)), "mu")
-    sigma <- RV.fromUnivariateDist(Gaussian(alg.liftToScalar(1.0), alg.liftToScalar(1.0)), "sigma")
+    mu <- RV.fromDist(Gaussian(alg.liftToScalar(0.0), alg.liftToScalar(10)), "mu")
+    sigma <- RV.fromDist(Gaussian(alg.liftToScalar(1.0), alg.liftToScalar(1.0)), "sigma")
   yield Parameters(mu, sigma)
 
   
@@ -37,7 +37,7 @@ object DensityEstimation extends App:
         alg.liftToScalar(parameters.sigma)
       )
     data.foldLeft(alg.zeroScalar)((sum, point) =>
-      sum + targetDist.logPdf(point)
+      sum + targetDist.logPdf(alg.lift(point))
     )
     
   val posterior = prior.condition(likelihood)

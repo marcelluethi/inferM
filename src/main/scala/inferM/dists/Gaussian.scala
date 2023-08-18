@@ -17,15 +17,15 @@ import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
 import breeze.linalg.DenseVector
 
 
-class Gaussian(mu : alg.Scalar, sdev : alg.Scalar) extends Dist[Double]:
+class Gaussian(mu : alg.Scalar, sdev : alg.Scalar) extends UvDist[Double]:
   
-  def logPdf(x : Double): alg.Scalar = 
+  def logPdf(x : alg.Scalar): alg.Scalar = 
     import alg.* 
     val trig = summon[Trig[alg.Scalar]]
     val PI = alg.lift(Math.PI)
     val logSqrt2Pi = alg.liftToScalar(.5) * trig.log(alg.liftToScalar(2.0) * PI)
     val logSdev = trig.log(sdev)
-    val a = (alg.liftToScalar(x) - mu) / sdev
+    val a = (x - mu) / sdev
     alg.liftToScalar(-0.5) * a * a - logSqrt2Pi - logSdev
 
   def draw() : Double = 
@@ -33,14 +33,14 @@ class Gaussian(mu : alg.Scalar, sdev : alg.Scalar) extends Dist[Double]:
     dist.draw()
 
 
-class MultivariateGaussian(mean : alg.ColumnVector, cov : alg.Matrix)  extends Dist[DenseVector[Double]]:
+class MultivariateGaussian(mean : alg.ColumnVector, cov : alg.Matrix)  extends MvDist[DenseVector[Double]]:
 
-  def logPdf(x : DenseVector[Double]) = 
+  def logPdf(x : alg.ColumnVector) = 
     import alg.*
     val trig = summon[Trig[alg.Scalar]]
     val nroot = summon[NRoot[alg.Scalar]]
 
-    val centered = alg.lift(x) - mean
+    val centered = x - mean
     val precision = cov.inv
 
     val k = mean.length
