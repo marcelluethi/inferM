@@ -17,14 +17,17 @@ import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
 import breeze.linalg.DenseVector
 
 
-class Exponential(lambda : alg.Scalar) extends UvDist[Double]:
+class Exponential(lambda : alg.Scalar) extends Dist[Double]:
   
-  def logPdf(x : alg.Scalar): alg.Scalar = 
+  def logPdf(x : Double): alg.Scalar = 
     import alg.* 
     val trig = summon[Trig[alg.Scalar]]
-    if x.value < 0 then alg.liftToScalar(Double.NegativeInfinity) 
-    else lambda * alg.lift(-1) * x + trig.log(lambda)
+    if x < 0 then alg.liftToScalar(Double.NegativeInfinity) 
+    else lambda * alg.lift(-1) * alg.lift(x) + trig.log(lambda)
 
   def draw() : Double = 
     val dist = bdists.Exponential(lambda.value)
     dist.draw()
+
+  def toRV(name : String) : RV[Double] = 
+    RV[Double](s => s(name).asInstanceOf[alg.Scalar].value, s => logPdf(s(name).asInstanceOf[alg.Scalar].value))

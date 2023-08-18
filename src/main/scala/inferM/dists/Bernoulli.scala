@@ -12,17 +12,19 @@ import breeze.stats.distributions.Rand.FixedSeed.randBasis
 import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.{algebraT as alg}
 import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
 
-class Bernoulli(p : alg.Scalar) extends UvDist[Boolean]:
+class Bernoulli(p : alg.Scalar) extends Dist[Boolean]:
   
-  def logPdf(x : alg.Scalar): alg.Scalar = 
+  def logPdf(x : Boolean): alg.Scalar = 
 
     val trig = summon[Trig[alg.Scalar]]
-    if DistUtils.scalarIsZero(x) == false then
+    if x == false then
       trig.log(alg.liftToScalar(1.0) - p)
     else
       trig.log(p)
 
   def draw() : Boolean = 
     val dist = bdists.Bernoulli(p.value)
-    dist.draw()
+    dist.draw() 
 
+  def toRV(name : String) : RV[Boolean] = 
+    RV[Boolean](s => if DistUtils.scalarIsZero(s(name).asInstanceOf[alg.Scalar])  then false else true, s => logPdf(DistUtils.scalarIsZero(s(name).asInstanceOf[alg.Scalar])))

@@ -24,7 +24,7 @@ object PrimitiveMVNormal extends App:
   val cov = alg.lift(DenseMatrix((1.0, 0.5), (0.5, 1.0)))
 
   val prior = for  
-    x <- RV.fromDist(MultivariateGaussian(mean,  cov), "x")
+    x <- MultivariateGaussian(mean,  cov).toRV("x")
   yield x
 
   

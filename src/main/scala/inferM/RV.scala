@@ -14,7 +14,7 @@ import breeze.linalg.DenseVector
   * 
   * @tparam S The type of samples produced by sampling from this random variable
   */
-class RV[S] private (val value : LatentSample => S, val logDensity : LatentSample => alg.Scalar):
+class RV[S] (val value : LatentSample => S, val logDensity : LatentSample => alg.Scalar):
 
   /**
     * Generate samples 
@@ -65,14 +65,3 @@ object RV:
     */
   type LatentSampleDouble = Map[String, Double | DenseVector[Double]]
 
-  /**
-    * Creates a random variable from a primitive distribution (I.e. one whose density function is known analytically)
-    */
-  def fromDist(p : UvDist[Double], name : String) : RV[Double] =  
-      RV( value => value(name).asInstanceOf[alg.Scalar].value, params => p.logPdf(params(name).asInstanceOf[alg.Scalar]))
-
-  /**
-    * Creates a random variable from a primitive distribution (I.e. one whose density function is known analytically)
-    */
-  def fromDist(p : MvDist[DenseVector[Double]], name : String) : RV[DenseVector[Double]] =  
-      RV( value => value(name).asInstanceOf[alg.ColumnVector].value, params => p.logPdf(params(name).asInstanceOf[alg.ColumnVector]))

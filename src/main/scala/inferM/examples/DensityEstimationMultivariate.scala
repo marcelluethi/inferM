@@ -28,12 +28,12 @@ object DensityEstimationMultiVariate extends App:
   case class Parameters(mu : DenseVector[Double], sigma2 : Double)
 
   val prior = for  
-    mu <- RV.fromDist(
+    mu <- 
       MultivariateGaussian(
         alg.lift(DenseVector.ones[Double](2)), 
         alg.lift(DenseMatrix.eye[Double](2) * 1.0)
-      ), "mean")
-    sigma2 <- RV.fromDist(Exponential(alg.lift(0.1)), "sigma2")    
+      ).toRV("mean")
+    sigma2 <- Exponential(alg.lift(0.1)).toRV("sigma2")
   yield Parameters(mu, sigma2)
 
   
@@ -44,7 +44,7 @@ object DensityEstimationMultiVariate extends App:
     )
       
     data.foldLeft(alg.zeroScalar)((sum, point) =>
-      sum + targetDist.logPdf(alg.lift(point))
+      sum + targetDist.logPdf(point)
     )
     
   val posterior = prior.condition(likelihood)

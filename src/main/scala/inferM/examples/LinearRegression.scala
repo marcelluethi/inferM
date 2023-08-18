@@ -29,9 +29,9 @@ object LinearRegression extends App:
   case class Parameters(a : Double, b : Double, sigma : Double)
 
   val prior = for  
-    a <- RV.fromDist(Gaussian(alg.lift(1.0), alg.lift(10)), "a")
-    b <- RV.fromDist(Gaussian(alg.lift(2.0), alg.lift(10)), "b")
-    sigma <- RV.fromDist(Exponential(alg.lift(1.0)), "sigma")
+    a <- Gaussian(alg.lift(1.0), alg.lift(10)).toRV("a")
+    b <- Gaussian(alg.lift(2.0), alg.lift(10)).toRV("b")
+    sigma <- Exponential(alg.lift(1.0)).toRV("sigma")
   yield Parameters(a, b, sigma)
 
   
@@ -41,7 +41,7 @@ object LinearRegression extends App:
       sum + Gaussian(
         alg.lift(parameters.a)  * alg.lift(x) +alg.lift(parameters.b), 
         alg.lift(parameters.sigma)
-      ).logPdf(alg.lift(y))
+      ).logPdf(y)
     )
 
   val posterior = prior.condition(likelihood)

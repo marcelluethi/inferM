@@ -18,11 +18,11 @@ import BreezeDoubleForwardMode.{algebraT as alg}
 object LoadedCoin extends App:  
 
   // example data
-  val pGroundTruth = 0.1
+  val pGroundTruth = 0.8
   val data = bdists.Bernoulli(pGroundTruth).sample(100)
 
   val prior = for  
-    p <- RV.fromDist(Uniform(alg.liftToScalar(0.0), alg.liftToScalar(1.0)), "p")
+    p <- Uniform(alg.liftToScalar(0.0), alg.liftToScalar(1.0)).toRV("p")
   yield p
 
   
@@ -30,7 +30,7 @@ object LoadedCoin extends App:
     val targetDist = Bernoulli(alg.liftToScalar(p))
     
     data.foldLeft(alg.zeroScalar)((sum, x) =>
-      sum + targetDist.logPdf(if x == true then alg.lift(1.0) else alg.lift(0.0))
+      sum + targetDist.logPdf(x)
     )
     
   val posterior = prior.condition(likelihood)

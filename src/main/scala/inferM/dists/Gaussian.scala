@@ -17,30 +17,31 @@ import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
 import breeze.linalg.DenseVector
 
 
-class Gaussian(mu : alg.Scalar, sdev : alg.Scalar) extends UvDist[Double]:
+class Gaussian(mu : alg.Scalar, sdev : alg.Scalar) extends Dist[Double]:
   
-  def logPdf(x : alg.Scalar): alg.Scalar = 
+  def logPdf(x : Double): alg.Scalar = 
     import alg.* 
-    val trig = summon[Trig[alg.Scalar]]
-    val PI = alg.lift(Math.PI)
-    val logSqrt2Pi = alg.liftToScalar(.5) * trig.log(alg.liftToScalar(2.0) * PI)
-    val logSdev = trig.log(sdev)
-    val a = (x - mu) / sdev
-    alg.liftToScalar(-0.5) * a * a - logSqrt2Pi - logSdev
+    val trig = summon[Trig[alg.Scalar]]          
+
+    val norm = trig.log(alg.lift(1.0) / (sdev * alg.lift(Math.sqrt(2.0 * Math.PI))))
+    val a = (alg.lift(x) - mu) / sdev
+    norm + alg.liftToScalar(-0.5) * a * a 
 
   def draw() : Double = 
     val dist = bdists.Gaussian(mu.value, sdev.value)
     dist.draw()
 
+  def toRV(name : String) : RV[Double] = 
+    RV[Double](s => s(name).asInstanceOf[alg.Scalar].value, s => logPdf(s(name).asInstanceOf[alg.Scalar].value))
 
-class MultivariateGaussian(mean : alg.ColumnVector, cov : alg.Matrix)  extends MvDist[DenseVector[Double]]:
+class MultivariateGaussian(mean : alg.ColumnVector, cov : alg.Matrix)  extends Dist[DenseVector[Double]]:
 
-  def logPdf(x : alg.ColumnVector) = 
+  def logPdf(x : DenseVector[Double]) = 
     import alg.*
     val trig = summon[Trig[alg.Scalar]]
     val nroot = summon[NRoot[alg.Scalar]]
 
-    val centered = x - mean
+    val centered = alg.lift(x) - mean
     val precision = cov.inv
 
     val k = mean.length
@@ -53,3 +54,6 @@ class MultivariateGaussian(mean : alg.ColumnVector, cov : alg.Matrix)  extends M
   def draw() : DenseVector[Double] = 
     val dist = bdists.MultivariateGaussian(mean.value, cov.value)
     dist.draw()
+
+  def toRV(name : String) : RV[DenseVector[Double]] = 
+    RV(s => s(name).asInstanceOf[alg.ColumnVector].value, s => logPdf(s(name).asInstanceOf[alg.ColumnVector].value))
