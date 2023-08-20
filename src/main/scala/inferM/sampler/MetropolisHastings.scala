@@ -1,29 +1,40 @@
 package inferM.sampler
 
-import inferM.* 
-import inferM.RV.{LatentSample, LatentSampleDouble}
+import inferM.*
+import inferM.RV.{LatentSample}
 import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode
 import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
-import BreezeDoubleForwardMode.{algebraT as alg}
 import breeze.linalg.DenseVector
+import scalagrad.api.matrixalgebra.MatrixAlgebra
 
-/**
-  * Implementation of the Metropolis Hastings algorithm
-  *
+/** Implementation of the Metropolis Hastings algorithm
   */
-class MetropolisHastings[A](initialValue : LatentSampleDouble, proposal :LatentSampleDouble => LatentSampleDouble)(using rng : breeze.stats.distributions.RandBasis) extends Sampler[A]:
-  def sample(rv : RV[A]) : Iterator[A] = 
+class MetropolisHastings[A, S, CV](
+    initialValue: LatentSample[S, CV],
+    proposal: LatentSample[S, CV] => LatentSample[S, CV]
+)(using
+    alg: MatrixAlgebra[S, CV, _, _],
+    rng: breeze.stats.distributions.RandBasis
+) extends Sampler[A, S, CV]:
+  def sample(rv: RV[A, S, CV]): Iterator[A] =
 
-    def liftSample(sample: LatentSampleDouble): LatentSample =
-      sample.map{
-        case (name, value : Double) => (name, alg.liftToScalar(value))
-        case (name, value : DenseVector[Double]) => (name, alg.lift(value))
+    def liftSample(sample: LatentSample[S, CV]): LatentSample[S, CV] =
+      sample.map {
+        case (name, value: Double) => (name, alg.liftToScalar(value))
+        case (name, value: DenseVector[Double @unchecked]) =>
+          (
+            name,
+            alg.createColumnVectorFromElements(
+              value.toScalaVector.map(alg.liftToScalar)
+            )
+          )
+        case (_, _) => throw new Exception("Should not happen")
       }
 
     def oneStep(
-        currentSample: LatentSampleDouble,
-        newProposal:LatentSampleDouble
-    ): LatentSampleDouble =
+        currentSample: LatentSample[S, CV],
+        newProposal: LatentSample[S, CV]
+    ): LatentSample[S, CV] =
 
       val currentP = rv.logDensity(liftSample(currentSample))
       val newP = rv.logDensity(liftSample(newProposal))
@@ -36,6 +47,5 @@ class MetropolisHastings[A](initialValue : LatentSampleDouble, proposal :LatentS
     Iterator
       .iterate(initialValue)(currentSample =>
         oneStep(currentSample, proposal(currentSample))
-    ).map(params => rv.value(liftSample(params)))
-
-
+      )
+      .map(params => rv.value(liftSample(params)))

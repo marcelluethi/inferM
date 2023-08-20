@@ -1,20 +1,13 @@
 package inferM
 
+/** A distribution that can be sampled from and whose log-pdf can be computed
+  */
+trait Dist[A, S, CV]:
+  def logPdf(value: S): S
+  def toRV(name: String): RV[A, S, CV]
+  def draw(): A
 
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode
-import BreezeDoubleForwardMode.{algebraT as alg}
-
-
-/** 
- * A distribution that can be sampled from and whose log-pdf can be computed
-*/
-trait Dist[A]:
-  def logPdf(a: A): alg.Scalar
-  def toRV(name : String) : RV[A]
-  def draw() : A
-
-// trait MvDist[A]:
-//   def logPdf(a : A): alg.Scalar
-//   def toRV(name : String) : RV[A]
-//   def draw() : A
-
+trait MvDist[A, S, CV]:
+  def logPdf(value: CV): S
+  def toRV(name: String): RV[A, S, CV]
+  def draw(): A

@@ -1,30 +1,34 @@
 package inferM.dists
 
-import inferM.* 
-
+import inferM.*
 
 import scalagrad.api.matrixalgebra.MatrixAlgebraDSL
 import scalagrad.api.spire.trig.DualScalarIsTrig.given
-import spire.implicits.DoubleAlgebra 
+import spire.implicits.DoubleAlgebra
 import spire.algebra.Trig
 import breeze.stats.{distributions => bdists}
 import breeze.stats.distributions.Rand.FixedSeed.randBasis
+import breeze.linalg.DenseVector
+import scalagrad.api.matrixalgebra.MatrixAlgebra
+import spire.syntax.numeric.partialOrderOps
 
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.{algebraT as alg}
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
+class Uniform[S, CV](from: S, to: S)(using
+    alg: MatrixAlgebra[S, CV, _, _],
+    trig: Trig[S],
+    numeric: Numeric[S]
+) extends Dist[Double, S, CV]:
 
-class Uniform(from : alg.Scalar, to : alg.Scalar) extends Dist[Double]:
-  
-  def logPdf(x : Double): alg.Scalar = 
-    val trig = summon[Trig[alg.Scalar]]
+  def logPdf(x: S): S =
+    import numeric.*
+    if x >= from && x <= to then trig.log(alg.liftToScalar(1.0) / (to - from))
+    else alg.liftToScalar(Double.MinValue)
 
-    import alg.* 
-    if x >= from.value && x <= to.value then trig.log(alg.lift(1.0) / (to - from)) else alg.lift(Double.MinValue)
-  
-
-  def draw() : Double = 
-    val dist = bdists.Uniform(from.value, to.value)
+  def draw(): Double =
+    val dist = bdists.Uniform(alg.unliftToDouble(from), alg.unliftToDouble(to))
     dist.draw()
 
-  def toRV(name : String) : RV[Double] = 
-    RV[Double](s => s(name).asInstanceOf[alg.Scalar].value, s => logPdf(s(name).asInstanceOf[alg.Scalar].value))
+  def toRV(name: String): RV[Double, S, CV] =
+    RV(
+      s => alg.unliftToDouble(s(name).asInstanceOf[S]),
+      s => logPdf(s(name).asInstanceOf[S])
+    )

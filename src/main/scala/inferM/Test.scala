@@ -1,41 +1,29 @@
 package inferM
 
+import scalagrad.api.matrixalgebra.MatrixAlgebra
 
+@main
+def forwardSample2 =
+  // import ScalaGrad and the forward plan
+  import scalagrad.api.ScalaGrad
+  import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode
+  import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
+  import BreezeDoubleForwardMode.{algebraT as alg}
 
-trait Alg:
-  type Scalar
-  def zero : Scalar
+  class Foo[S]:
+    def f(x1: S, x2: S)(using MatrixAlgebra[S, _, _, _]): S =
+      x2 + x1
 
-object Alg1 extends Alg:
-  type Scalar = Double
-  def zero : Scalar =  1.0
+  def g[S](using MatrixAlgebra[S, _, _, _])(x1: S, x2: S): S =
+    x2 + x1
 
+  // derive the function
+  val foo = Foo[alg.Scalar]
+  val df = ScalaGrad.derive(foo.f) // HERE!
 
+  val df2 = ScalaGrad.derive(g[alg.Scalar]) // HERE!
+  println(df(3.0, 3.0))
 
-
-class RV1[A](val value : Alg ?=> Alg#Scalar => A, val density : Alg ?=> Alg#Scalar => Alg#Scalar):
-
-
-  def map[B](f : A => B) : RV1[B] = RV1(params => f(value(params)), density)
-
-  def flatMap[B](f : A => RV1[B]) : RV1[B] = RV1(
-    params => f(value(params)).value(params),    
-    params => f(value(params)).density(params) //+ density(params)
-  )
-  
-  def condition(likelihood : Alg ?=> Alg => A => Alg#Scalar) : RV1[A] = RV1(
-    params => value(params),
-    params => density(params) 
-  )
-  
-
-object RV1:
-  def fromPrimitive()(using alg : Alg) : RV1[Double] =  
-      RV1[Double]( value => 1.0, params => alg.zero)
-
-object Test:
-
-  given algGiven : Alg = Alg1
-  val rv = RV1.fromPrimitive()
-
-
+  // derive the function
+  // val df = ScalaGrad.derive(f[alg.Scalar])
+  // val dg = ScalaGrad.derive(g)
