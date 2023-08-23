@@ -99,12 +99,12 @@ class HMC[A](using rng: breeze.stats.distributions.RandBasis)(
         p.zip(gradU(q))
           .map {
             case ((name, p: Double), (_, dUq: Double)) =>
-              (name, p - epsilon * dUq / 2.0)
+              (name, p -  dUq * epsilon / 2.0)
             case (
                   (name, p: DenseVector[Double]),
                   (_, dUq: DenseVector[Double])
                 ) =>
-              (name, p - epsilon * dUq / 2.0)
+              (name, p -  dUq * epsilon/ 2.0)
             case _ => throw new Exception("Should not happen")
           }
           .toMap
@@ -117,7 +117,7 @@ class HMC[A](using rng: breeze.stats.distributions.RandBasis)(
                   (name, p: DenseVector[Double]),
                   (_, dUq: DenseVector[Double])
                 ) =>
-              (name, p - epsilon * dUq)
+              (name, p -  dUq * epsilon)
             case _ => throw new Exception("Should not happen")
           }
           .toMap
@@ -130,7 +130,7 @@ class HMC[A](using rng: breeze.stats.distributions.RandBasis)(
         .map {
           case ((name, q: Double), (_, p: Double)) => (name, q + epsilon * p)
           case ((name, q: DenseVector[Double]), (_, p: DenseVector[Double])) =>
-            (name, q + epsilon * p)
+            (name, q +  p * epsilon)
           case _ => throw new Exception("Should not happen")
         }
         .toMap
