@@ -3,37 +3,33 @@ package inferM
 import breeze.stats.{distributions => bdists}
 import breeze.stats.distributions.Rand.FixedSeed.randBasis
 
-import scalagrad.api.ScalaGrad
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.{algebraT as alg}
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
+import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode
+import BreezeDoubleForwardMode.given
+import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.{algebraT => alg}
+
 import inferM.RV.LatentSample
 import breeze.linalg.DenseVector
-import scalagrad.api.matrixalgebra.MatrixAlgebra
 
 /** A random variable, described by the logDensity function, from which samples
   * of type S can be drawn.
   *
   * @tparam A
   *   The type of samples produced by sampling from this random variable
-  * @tparam S
-  *   The Scalar type used (for autodiff)
-  * @tparam CV
-  *   The ColumnVector type used (for autodiff)
   */
-class RV[A, S, CV](
-    val value: LatentSample[S, CV] => A,
-    val logDensity: LatentSample[S, CV] => S
-)(using alg: MatrixAlgebra[S, CV, _, _]):
+class RV[A](
+    val value: LatentSample => A,
+    val logDensity: LatentSample => alg.Scalar
+):
 
   /** Generate samples
     */
-  def sample(sampler: Sampler[A, S, CV]): Iterator[A] =
+  def sample(sampler: Sampler[A]): Iterator[A] =
     sampler.sample(this)
 
   /** Map the sampled values of the random variable with a function f (the
     * pushforward of the random variable)
     */
-  def map[B](f: A => B): RV[B, S, CV] =
+  def map[B](f: A => B): RV[B] =
     RV(sample => f(value(sample)), logDensity)
 
   /** Map the sampled values of the random variable into a new random variable.
@@ -41,7 +37,7 @@ class RV[A, S, CV](
     * new one. (if this RV has density p(x) , the function f represents the
     * conditional distribution x-> p(y | x))
     */
-  def flatMap[B](f: A => RV[B, S, CV]): RV[B, S, CV] = RV(
+  def flatMap[B](f: A => RV[B]): RV[B] = RV(
     latentSample => f(value(latentSample)).value(latentSample),
     latentSample =>
       f(value(latentSample)).logDensity(latentSample) + logDensity(latentSample)
@@ -51,7 +47,7 @@ class RV[A, S, CV](
     * prior and the given likelihood function as a conditional distribution. The
     * likelihood needs to provide the log density for each given sample S
     */
-  def condition(likelihood: A => S): RV[A, S, CV] = RV(
+  def condition(likelihood: A => alg.Scalar): RV[A] = RV(
     latentSample => value(latentSample),
     latentSample => logDensity(latentSample) + likelihood(value(latentSample))
   )
@@ -67,4 +63,5 @@ object RV:
     * and to refer to it by name, when we for example need to pass initial
     * values to a sampler.
     */
-  type LatentSample[S, CV] = Map[String, S | CV]
+  type LatentSample = Map[String, alg.Scalar | alg.ColumnVector]
+  type LatentSampleDouble = Map[String, Double | DenseVector[Double]]

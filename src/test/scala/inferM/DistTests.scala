@@ -70,3 +70,27 @@ class MyTests extends munit.FunSuite:
     assert(Math.abs(mean - expectedMean) < 1e-1)
     assert(Math.abs(variance - expectedVariance) < 5e-1)
   }
+
+  // test("generates correct prior samples from a transformed gaussian distribution") {
+  //   val mu = 0.0
+  //   val sigma = 2.0
+  //   val bijection = new Bijection[alg.Scalar, alg.Scalar]:
+  //     import alg.*
+  //     def forward(x: alg.Scalar): alg.Scalar = x * alg.liftToScalar(2.0) + alg.liftToScalar(4.0) 
+  //     def inverse(x: alg.Scalar): alg.Scalar = alg.liftToScalar(Math.log(x))
+
+  //   val gaussian =
+  //     Gaussian(alg.liftToScalar(mu), alg.liftToScalar(sigma)).toRV("x")
+  //   val samples = gaussian
+  //     .sample(HMC(Map("x" -> 3.0), 1e-1, 10))
+  //     .drop(5000)
+  //     .take(100000)
+  //     .toSeq
+  //   val mean = samples.sum / samples.length
+  //   val expectedMean = mu
+  //   val variance =
+  //     samples.map(x => (x - mean) * (x - mean)).sum / samples.length
+  //   val expectedVariance = sigma * sigma
+  //   assert(Math.abs(mean - expectedMean) < 1e-1)
+  //   assert(Math.abs(variance - expectedVariance) < 5e-1)
+  // }

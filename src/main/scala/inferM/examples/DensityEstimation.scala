@@ -13,6 +13,7 @@ import breeze.stats.distributions.Rand.FixedSeed.randBasis
 import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode
 import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
 import BreezeDoubleForwardMode.{algebraT as alg}
+import scalagrad.api.matrixalgebra.MatrixAlgebra
 
 object DensityEstimation extends App:
 
@@ -26,8 +27,7 @@ object DensityEstimation extends App:
 
   val prior = for
     mu <- Gaussian(alg.liftToScalar(0.0), alg.liftToScalar(10)).toRV("mu")
-    sigma <- Gaussian(alg.liftToScalar(1.0), alg.liftToScalar(1.0))
-      .toRV("sigma")
+    sigma <- Gaussian(alg.liftToScalar(1.0), alg.liftToScalar(1.0)).toRV("sigma")
   yield Parameters(mu, sigma)
 
   val likelihood = (parameters: Parameters) =>

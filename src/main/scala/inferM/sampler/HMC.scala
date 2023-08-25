@@ -2,21 +2,16 @@ package inferM.sampler
 
 import inferM.*
 
+import inferM.RV.{LatentSample, LatentSampleDouble}
+import breeze.linalg.DenseVector
+
 import breeze.stats.{distributions => bdists}
 import scalagrad.api.ScalaGrad
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
 
-import inferM.RV.{LatentSample}
-import breeze.linalg.DenseVector
-import scalagrad.auto.breeze.BreezeDoubleMatrixAlgebra.given
-import scalagrad.api.matrixalgebra.MatrixAlgebra
+
 import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode
-import scalagrad.api.dual.DualColumnVector
-import scalagrad.auto.breeze.BreezeDoubleMatrixAlgebraDSL
-import scalagrad.api.matrixalgebra.MatrixAlgebraDSL
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
-import BreezeDoubleForwardMode.{algebraT as alg}
+import BreezeDoubleForwardMode.given
+import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.{algebraT => alg}
 
 /** Implementation of Hamiltonian Monte Carlo
   *
@@ -26,17 +21,17 @@ import BreezeDoubleForwardMode.{algebraT as alg}
   * @param rng
   */
 class HMC[A](using rng: breeze.stats.distributions.RandBasis)(
-    initialValue: LatentSample[Double, DenseVector[Double]],
+    initialValue: LatentSampleDouble,
     epsilon: Double,
     numLeapfrog: Int
-) extends Sampler[A, alg.Scalar, alg.ColumnVector]:
+) extends Sampler[A]:
 
   /** Given values for the parameters (as a Map), the function returns a Map
     * with the same keys, but with the values replaced by the gradient
     */
-  def gradDensity(rv: RV[A, alg.Scalar, alg.ColumnVector]): (
-      latent: LatentSample[Double, DenseVector[Double]]
-  ) => LatentSample[Double, DenseVector[Double]] = latentSample =>
+  def gradDensity(rv: RV[A]): (
+      latent: LatentSampleDouble
+  ) => LatentSampleDouble = latentSample =>
     latentSample.map {
       case (name, _: Double) =>
         def density(s: alg.Scalar): alg.Scalar =
@@ -58,8 +53,8 @@ class HMC[A](using rng: breeze.stats.distributions.RandBasis)(
     }
 
   def liftArgsToDual(
-      latentSample: LatentSample[Double, DenseVector[Double]]
-  ): LatentSample[alg.Scalar, alg.ColumnVector] =
+      latentSample: LatentSampleDouble
+  ): LatentSample =
     latentSample.map((name, value) =>
       value match
         case s: Double => (name, alg.liftToScalar(s))
@@ -72,15 +67,15 @@ class HMC[A](using rng: breeze.stats.distributions.RandBasis)(
           )
     )
 
-  def sample(rv: RV[A, alg.Scalar, alg.ColumnVector]): Iterator[A] =
+  def sample(rv: RV[A]): Iterator[A] =
     import alg.*
-    def U = (latentSample: LatentSample[Double, DenseVector[Double]]) =>
+    def U = (latentSample: LatentSampleDouble) =>
       val x = rv.logDensity(liftArgsToDual(latentSample))
       x * alg.liftToScalar(-1.0)
 
     def gradU(
-        current: LatentSample[Double, DenseVector[Double]]
-    ): LatentSample[Double, DenseVector[Double]] =
+        current: LatentSampleDouble
+    ): LatentSampleDouble =
       gradDensity(rv)(current)
         .map(
           (name, value) => // make it negative, as U is also negated (see above)
@@ -91,10 +86,10 @@ class HMC[A](using rng: breeze.stats.distributions.RandBasis)(
         )
 
     def pStep(
-        p: LatentSample[Double, DenseVector[Double]],
-        q: LatentSample[Double, DenseVector[Double]],
+        p: LatentSampleDouble,
+        q: LatentSampleDouble,
         halfStep: Boolean
-    ): LatentSample[Double, DenseVector[Double]] =
+    ): LatentSampleDouble =
       if halfStep then
         p.zip(gradU(q))
           .map {
@@ -123,9 +118,9 @@ class HMC[A](using rng: breeze.stats.distributions.RandBasis)(
           .toMap
 
     def qStep(
-        p: LatentSample[Double, DenseVector[Double]],
-        q: LatentSample[Double, DenseVector[Double]]
-    ): LatentSample[Double, DenseVector[Double]] =
+        p: LatentSampleDouble,
+        q: LatentSampleDouble
+    ): LatentSampleDouble =
       q.zip(p)
         .map {
           case ((name, q: Double), (_, p: Double)) => (name, q + epsilon * p)
@@ -135,7 +130,7 @@ class HMC[A](using rng: breeze.stats.distributions.RandBasis)(
         }
         .toMap
 
-    def logProbP(p: LatentSample[Double, DenseVector[Double]]): Double =
+    def logProbP(p: LatentSampleDouble): Double =
       p.map {
         case (name, value: Double) => (name, value * value / 2.0)
         case (name, value: DenseVector[Double]) =>
@@ -145,8 +140,8 @@ class HMC[A](using rng: breeze.stats.distributions.RandBasis)(
         .reduce(_ + _)
 
     def oneStep(
-        currentQ: LatentSample[Double, DenseVector[Double]]
-    ): LatentSample[Double, DenseVector[Double]] =
+        currentQ: LatentSampleDouble
+    ): LatentSampleDouble =
 
       var q = currentQ
       var currentP = currentQ.map {

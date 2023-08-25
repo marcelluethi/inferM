@@ -1,40 +1,33 @@
 package inferM.sampler
 
 import inferM.*
-import inferM.RV.{LatentSample}
+import inferM.RV.{LatentSample, LatentSampleDouble}
 import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
+import BreezeDoubleForwardMode.given
+import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.{algebraT => alg}
 import breeze.linalg.DenseVector
 import scalagrad.api.matrixalgebra.MatrixAlgebra
 
 /** Implementation of the Metropolis Hastings algorithm
   */
-class MetropolisHastings[A, S, CV](
-    initialValue: LatentSample[S, CV],
-    proposal: LatentSample[S, CV] => LatentSample[S, CV]
-)(using
-    alg: MatrixAlgebra[S, CV, _, _],
-    rng: breeze.stats.distributions.RandBasis
-) extends Sampler[A, S, CV]:
-  def sample(rv: RV[A, S, CV]): Iterator[A] =
+class MetropolisHastings[A](
+    initialValue: LatentSampleDouble,
+    proposal: LatentSampleDouble => LatentSampleDouble
+)(using rng: breeze.stats.distributions.RandBasis
+) extends Sampler[A]:
+  def sample(rv: RV[A]): Iterator[A] =
 
-    def liftSample(sample: LatentSample[S, CV]): LatentSample[S, CV] =
+    def liftSample(sample: LatentSampleDouble): LatentSample =
       sample.map {
-        case (name, value: Double) => (name, alg.liftToScalar(value))
+        case (name, value: Double) => (name, alg.lift(value))
         case (name, value: DenseVector[Double @unchecked]) =>
-          (
-            name,
-            alg.createColumnVectorFromElements(
-              value.toScalaVector.map(alg.liftToScalar)
-            )
-          )
-        case (_, _) => throw new Exception("Should not happen")
+          ( name,  alg.lift(value) )
       }
 
     def oneStep(
-        currentSample: LatentSample[S, CV],
-        newProposal: LatentSample[S, CV]
-    ): LatentSample[S, CV] =
+        currentSample: LatentSampleDouble,
+        newProposal: LatentSampleDouble
+    ): LatentSampleDouble =
 
       val currentP = rv.logDensity(liftSample(currentSample))
       val newP = rv.logDensity(liftSample(newProposal))
