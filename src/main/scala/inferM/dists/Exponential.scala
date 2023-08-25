@@ -15,9 +15,9 @@ import breeze.stats.distributions.Rand.FixedSeed.randBasis
 import breeze.linalg.DenseVector
 import scalagrad.api.matrixalgebra.MatrixAlgebra
 
-class Exponential(lambda: alg.Scalar) extends Dist[Double]:
+class Exponential(lambda: alg.Scalar) extends Dist:
 
-  def value(s : alg.Scalar) : Double = s.value
+  def value(s : alg.Scalar) : alg.Scalar = s
 
   def logPdf(x: alg.Scalar): alg.Scalar =  
     if x.value < 0 then alg.lift(Double.NegativeInfinity)

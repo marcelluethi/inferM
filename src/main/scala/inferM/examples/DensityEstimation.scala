@@ -18,23 +18,20 @@ import scalagrad.api.matrixalgebra.MatrixAlgebra
 object DensityEstimation extends App:
 
   // example data
-  val muGroundTruth = 3.0
+  val muGroundTruth = 5.0
   val sigmaGroundTruth = 2.0
 
   val data = bdists.Gaussian(muGroundTruth, sigmaGroundTruth).sample(100)
 
-  case class Parameters(mu: Double, sigma: Double)
+  case class Parameters(mu: alg.Scalar, sigma: alg.Scalar)
 
   val prior = for
     mu <- Gaussian(alg.liftToScalar(0.0), alg.liftToScalar(10)).toRV("mu")
-    sigma <- Gaussian(alg.liftToScalar(1.0), alg.liftToScalar(1.0)).toRV("sigma")
+    sigma <- Exponential(alg.liftToScalar(1.0)).toRV("sigma")
   yield Parameters(mu, sigma)
 
   val likelihood = (parameters: Parameters) =>
-    val targetDist = Gaussian(
-      alg.liftToScalar(parameters.mu),
-      alg.liftToScalar(parameters.sigma)
-    )
+    val targetDist = Gaussian(parameters.mu, parameters.sigma)
     data.foldLeft(alg.zeroScalar)((sum, point) =>
       sum + targetDist.logPdf(alg.liftToScalar(point))
     )
@@ -44,11 +41,11 @@ object DensityEstimation extends App:
   // Sampling
   val hmc = HMC[Parameters](
     initialValue = Map("mu" -> 0.0, "sigma" -> 1.0),
-    epsilon = 0.05,
+    epsilon = 0.01,
     numLeapfrog = 20
   )
 
-  val samples = posterior.sample(hmc).take(1000).toSeq
-//  println(samples)
-  println("mean mu: " + samples.map(_.mu).sum / samples.size)
-  println("mean sigma: " + samples.map(_.sigma).sum / samples.size)
+  val samples = posterior.sample(hmc).drop(1000).take(1000).toSeq
+
+  println("mean mu: " + samples.map(_.mu.toDouble).sum / samples.size)
+  println("mean sigma: " + samples.map(_.sigma.toDouble).sum / samples.size)

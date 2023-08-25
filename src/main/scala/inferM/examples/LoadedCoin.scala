@@ -9,7 +9,7 @@ import spire.implicits.DoubleAlgebra
 import scalagrad.api.spire.numeric.DualScalarIsNumeric.given
 import spire.compat.numeric
 import breeze.stats.{distributions => bdists}
-import breeze.stats.distributions.Rand.FixedSeed.randBasis
+import breeze.stats.distributions.Rand.VariableSeed.randBasis
 
 import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode
 import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
@@ -18,30 +18,31 @@ import BreezeDoubleForwardMode.{algebraT as alg}
 object LoadedCoin extends App:
 
   // example data
-  val pGroundTruth = 0.8
+  val pGroundTruth = 0.1
   val data = bdists.Bernoulli(pGroundTruth).sample(100)
 
   val prior =
-    for p <- Uniform(alg.liftToScalar(0.0), alg.liftToScalar(1.0)).toRV("p")
+    for p <- Gaussian(alg.liftToScalar(0.5), alg.liftToScalar(1.0)).toRV("p")
     yield p
 
-  val likelihood = (p: Double) =>
-    val targetDist = Bernoulli(alg.liftToScalar(p))
+  val likelihood = (p: alg.Scalar) =>
+    val targetDist = Bernoulli(p)
 
     data.foldLeft(alg.zeroScalar)((sum, x) =>
       sum + targetDist.logPdf(
-        if x == false then alg.liftToScalar(0.0) else alg.liftToScalar(1.0)
+        if x then alg.liftToScalar(1.0) else alg.liftToScalar(0.0)
       )
     )
 
   val posterior = prior.condition(likelihood)
 
   // Sampling
-  val hmc = HMC[Double](
+  val hmc = HMC[alg.Scalar](
     initialValue = Map("p" -> 0.5),
-    epsilon = 0.05,
+    epsilon = 0.01,
     numLeapfrog = 20
   )
 
   val samples = posterior.sample(hmc).take(1000).toSeq
-  println("mean p: " + samples.sum / samples.size)
+
+  println("mean p: " + samples.map(_.value).sum / samples.size)

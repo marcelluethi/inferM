@@ -11,14 +11,14 @@ import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.{algebraT => alg}
 
 /** A distribution that can be sampled from and whose log-pdf can be computed
   */
-trait Dist[A]:
+trait Dist:
 
   self => 
 
     def logPdf(s: alg.Scalar): alg.Scalar
-    def value(s : alg.Scalar) : A
-    def toRV(name: String): RV[A] = 
-      RV[A](
+    def value(s : alg.Scalar) : alg.Scalar
+    def toRV(name: String): RV[alg.Scalar] = 
+      RV[alg.Scalar](
         s => self.value(s(name).asInstanceOf[alg.Scalar]),
         s => self.logPdf(s(name).asInstanceOf[alg.Scalar])
       )
@@ -35,13 +35,13 @@ trait Dist[A]:
 
 
 
-trait MvDist[A]:
+trait MvDist:
   self =>
 
     def logPdf(value: alg.ColumnVector): alg.Scalar
-    def value(v : alg.ColumnVector) : A
-    def toRV(name: String): RV[A] = 
-      RV[A](
+    def value(v : alg.ColumnVector) : alg.ColumnVector
+    def toRV(name: String): RV[alg.ColumnVector] = 
+      RV[alg.ColumnVector](
           s => self.value(s(name).asInstanceOf[alg.ColumnVector]),
           s => self.logPdf(s(name).asInstanceOf[alg.ColumnVector])
         )

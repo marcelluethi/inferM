@@ -13,9 +13,9 @@ import breeze.stats.distributions.Rand.FixedSeed.randBasis
 import breeze.linalg.DenseVector
 import spire.syntax.numeric.partialOrderOps
 
-class Uniform(from: alg.Scalar, to: alg.Scalar) extends Dist[Double]:
+class Uniform(from: alg.Scalar, to: alg.Scalar) extends Dist:
 
-  def value(s : alg.Scalar) = s.value
+  def value(v : alg.Scalar) = v
 
   def logPdf(x: alg.Scalar): alg.Scalar =
     if x.value >= from.value && x.value <= to.value then alg.trig.log(alg.liftToScalar(1.0) / (to - from))

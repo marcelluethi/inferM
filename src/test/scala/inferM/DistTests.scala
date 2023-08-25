@@ -16,6 +16,10 @@ import spire.algebra.NRoot
 import spire.algebra.Trig
 import spire.compat.given
 import spire.implicits.DoubleAlgebra
+import breeze.linalg.DenseVector
+import breeze.linalg.DenseMatrix
+import inferM.dists.MultivariateGaussian
+import breeze.numerics.exp
 //import inferM.dists.Bernoulli
 
 class MyTests extends munit.FunSuite:
@@ -24,7 +28,7 @@ class MyTests extends munit.FunSuite:
     val (a, b) = (2, 4)
     val uniform = Uniform(alg.liftToScalar(a), alg.liftToScalar(b)).toRV("x")
     val samples =
-      uniform.sample(HMC(Map("x" -> 0.0), 0.1, 10)).drop(1000).take(10000).toSeq
+      uniform.sample(HMC(Map("x" -> 0.0), 0.1, 10)).drop(1000).take(10000).map(_.toDouble).toSeq
     val mean = samples.sum / samples.length
     val expectedMean = a + (b - a) / 2
     val variance =
@@ -42,6 +46,7 @@ class MyTests extends munit.FunSuite:
       .sample(HMC(Map("lambda" -> 1.0), 0.01, 10))
       .drop(1000)
       .take(10000)
+      .map(_.toDouble)
       .toSeq
     val mean = samples.sum / samples.length
     val expectedMean = 1.0 / lambda
@@ -61,6 +66,7 @@ class MyTests extends munit.FunSuite:
       .sample(HMC(Map("x" -> 3.0), 1e-1, 10))
       .drop(5000)
       .take(100000)
+      .map(_.toDouble)
       .toSeq
     val mean = samples.sum / samples.length
     val expectedMean = mu
@@ -70,6 +76,27 @@ class MyTests extends munit.FunSuite:
     assert(Math.abs(mean - expectedMean) < 1e-1)
     assert(Math.abs(variance - expectedVariance) < 5e-1)
   }
+
+
+  test("generates correct prior samples from a multivariate gaussian distribution") {
+    val expectedMean = DenseVector(1.0, -1.0)
+    val mu = alg.lift(expectedMean)
+    val cov = alg.lift(DenseMatrix((3.0, 0.0), (0.0, 3.0)))
+    
+    val gaussian = MultivariateGaussian(mu, cov).toRV("x")      
+    val samples = gaussian
+      .sample(HMC(Map("x" -> DenseVector(0.0, 0.0)), 1e-1, 10))
+      .drop(5000)
+      .take(100000)
+      .map(_.value)
+      .toSeq
+    val mean = samples.foldLeft(DenseVector(0.0, 0.0))((acc, v) => acc + v) * (1.0 /  samples.length)
+
+    assert(breeze.linalg.norm(mean - expectedMean) < 1e-1)
+
+  }
+
+
 
   // test("generates correct prior samples from a transformed gaussian distribution") {
   //   val mu = 0.0

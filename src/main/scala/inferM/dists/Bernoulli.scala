@@ -12,14 +12,9 @@ import breeze.stats.distributions.Rand.FixedSeed.randBasis
 import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
 import scalagrad.api.matrixalgebra.MatrixAlgebra
 
-class Bernoulli(p: alg.Scalar) extends Dist[Boolean]:
+class Bernoulli(p: alg.Scalar) extends Dist:
 
-  def value(s : alg.Scalar) : Boolean =    
-    def isCloseToZero(v: alg.Scalar) =
-      Math.abs(alg.unliftToDouble(v)) < 1e-10
-    
-    if isCloseToZero(s) then false else true
-
+  def value(s : alg.Scalar) : alg.Scalar =  if (s.value <= p.value) alg.lift(1.0) else alg.lift(0.0)
 
   def logPdf(x: alg.Scalar): alg.Scalar =
     if Math.abs(x.value) < 1e-5 then

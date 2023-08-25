@@ -28,22 +28,23 @@ object DensityEstimationMultiVariate extends App:
   val data =
     bdists.MultivariateGaussian(muGroundTruth, covGroundTruth).sample(100)
 
-  case class Parameters(mu: DenseVector[Double], sigma2: Double)
+  case class Parameters(mu: alg.ColumnVector, sigma2: alg.Scalar)
 
   val prior = for
     mu <-
       MultivariateGaussian(
         alg.lift(DenseVector.ones[Double](2)),
-        alg.lift(DenseMatrix.eye[Double](2) * 1.0)
+        alg.lift(DenseMatrix.eye[Double](2) * 10.0)
       ).toRV("mean")
     sigma2 <- Exponential(alg.lift(0.1)).toRV("sigma2")
   yield Parameters(mu, sigma2)
 
   val likelihood = (parameters: Parameters) =>
     val targetDist = MultivariateGaussian(
-      alg.lift(parameters.mu),
-      alg.lift(DenseMatrix.eye[Double](2)) * alg.lift(parameters.sigma2)
+      parameters.mu,
+      alg.lift(DenseMatrix.eye[Double](2)) * parameters.sigma2
     )
+    
 
     data.foldLeft(alg.zeroScalar)((sum, point) =>
       sum + targetDist.logPdf(alg.lift(point))
@@ -59,11 +60,11 @@ object DensityEstimationMultiVariate extends App:
   )
 
   val samples = posterior.sample(hmc).drop(500).take(1000).toSeq
-  val estimatedMean = samples.map(_.mu).reduce(_ + _) * (1.0 / samples.size)
+  val estimatedMean = samples.map(_.mu.value).reduce(_ + _) * (1.0 / samples.size)
   val estimatedSigma2 =
-    samples.map(_.sigma2).reduce(_ + _) * (1.0 / samples.size)
+    samples.map(_.sigma2.value).reduce(_ + _) * (1.0 / samples.size)
   val varSigma2 = samples
-    .map(_.sigma2)
+    .map(_.sigma2.value)
     .map(x => (x - estimatedSigma2) * (x - estimatedSigma2))
     .reduce(_ + _) * (1.0 / samples.size)
   println("mean " + estimatedMean)

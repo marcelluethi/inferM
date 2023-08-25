@@ -12,9 +12,9 @@ import breeze.linalg.DenseVector
 import scalagrad.api.matrixalgebra.MatrixAlgebra
 import spire.algebra.NRoot
 
-class Gaussian(mu: alg.Scalar, sdev: alg.Scalar) extends Dist[Double]:
+class Gaussian(mu: alg.Scalar, sdev: alg.Scalar) extends Dist:
 
-  def value(s : alg.Scalar) : Double = alg.unliftToDouble(s)
+  def value(s : alg.Scalar) : alg.Scalar = s
 
   def logPdf(x: alg.Scalar): alg.Scalar =
     
@@ -28,9 +28,9 @@ class Gaussian(mu: alg.Scalar, sdev: alg.Scalar) extends Dist[Double]:
     val dist = bdists.Gaussian(alg.unliftToDouble(mu), alg.unliftToDouble(sdev))
     dist.draw()
 
-class MultivariateGaussian[S](mean: alg.ColumnVector, cov: alg.Matrix)(using nroot : NRoot[alg.Scalar]) extends MvDist[DenseVector[Double]]:
+class MultivariateGaussian(mean: alg.ColumnVector, cov: alg.Matrix) extends MvDist:
 
-  def value(vec : alg.ColumnVector) : DenseVector[Double] = vec.value
+  def value(v : alg.ColumnVector) : alg.ColumnVector = v
 
   def logPdf(x: alg.ColumnVector): alg.Scalar =
 
@@ -42,7 +42,7 @@ class MultivariateGaussian[S](mean: alg.ColumnVector, cov: alg.Matrix)(using nro
     val logNormalizer = alg.trig.log(
       alg.lift(Math.pow(Math.PI * 2, -k / 2.0)) * (alg.lift(
         1.0
-      ) / nroot.sqrt(cov.det))
+      ) / alg.num.sqrt(cov.det))
     )
 
     alg.lift(-0.5) * centered.t * (precision * centered) + logNormalizer
