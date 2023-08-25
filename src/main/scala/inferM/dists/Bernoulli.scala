@@ -8,18 +8,17 @@ import spire.algebra.Trig
 import breeze.stats.{distributions => bdists}
 import breeze.stats.distributions.Rand.FixedSeed.randBasis
 
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
 import scalagrad.api.matrixalgebra.MatrixAlgebra
+import spire.implicits.trigOps
 
 class Bernoulli[S, CV](p: S)(using
     alg: MatrixAlgebra[S, CV, _, _],
-    trig: Trig[S]
 ) extends Dist[Boolean, S, CV]:
 
   def logPdf(x: S): S =
     if (Math.abs(alg.unliftToDouble(x)) < 1e-5) then
-      trig.log(alg.liftToScalar(1.0) - p)
-    else trig.log(p)
+      alg.trig.log(alg.liftToScalar(1.0) - p)
+    else alg.trig.log(p)
 
   def draw(): Boolean =
     val dist = bdists.Bernoulli(alg.unliftToDouble(p))

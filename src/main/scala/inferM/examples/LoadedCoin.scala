@@ -1,5 +1,6 @@
 package inferM.examples
 
+/*
 import inferM.*
 import inferM.dists.*
 import inferM.sampler.*
@@ -45,3 +46,4 @@ object LoadedCoin extends App:
 
   val samples = posterior.sample(hmc).take(1000).toSeq
   println("mean p: " + samples.sum / samples.size)
+*/

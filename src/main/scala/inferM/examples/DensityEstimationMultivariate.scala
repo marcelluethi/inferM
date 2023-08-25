@@ -1,5 +1,5 @@
 package inferM.examples
-
+/*
 import inferM.*
 import inferM.dists.*
 import inferM.sampler.*
@@ -69,3 +69,4 @@ object DensityEstimationMultiVariate extends App:
   println("mean " + estimatedMean)
   println("sigma2 " + estimatedSigma2)
   println("var sigma2 " + varSigma2)
+*/

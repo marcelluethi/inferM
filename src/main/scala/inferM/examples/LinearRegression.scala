@@ -1,5 +1,5 @@
 package inferM.examples
-
+/*
 import inferM.*
 import inferM.dists.*
 import inferM.sampler.*
@@ -63,3 +63,4 @@ object LinearRegression extends App:
   println("mean a: " + samples.map(_._1).sum / samples.size)
   println("mean b: " + samples.map(_._2).sum / samples.size)
   println("mean sigma: " + samples.map(_._3).sum / samples.size)
+*/

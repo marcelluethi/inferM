@@ -16,19 +16,19 @@ class Uniform[S, CV](from: S, to: S)(using
     alg: MatrixAlgebra[S, CV, _, _],
     trig: Trig[S],
     numeric: Numeric[S]
-) extends Dist[Double, S, CV]:
+) extends Dist[S, S, CV]:
 
   def logPdf(x: S): S =
     import numeric.*
     if x >= from && x <= to then trig.log(alg.liftToScalar(1.0) / (to - from))
     else alg.liftToScalar(Double.MinValue)
 
-  def draw(): Double =
-    val dist = bdists.Uniform(alg.unliftToDouble(from), alg.unliftToDouble(to))
-    dist.draw()
+  def draw(): S =
+    val dist = bdists.Uniform(alg.unlift(from), alg.unlift(to))
+    alg.lift(dist.draw())
 
-  def toRV(name: String): RV[Double, S, CV] =
+  def toRV(name: String): RV[S, S, CV] =
     RV(
-      s => alg.unliftToDouble(s(name).asInstanceOf[S]),
+      s => s(name).asInstanceOf[S],
       s => logPdf(s(name).asInstanceOf[S])
     )

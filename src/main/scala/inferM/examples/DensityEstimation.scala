@@ -1,5 +1,5 @@
 package inferM.examples
-
+/*
 import inferM.*
 import inferM.dists.*
 import inferM.sampler.*
@@ -52,3 +52,4 @@ object DensityEstimation extends App:
 //  println(samples)
   println("mean mu: " + samples.map(_.mu).sum / samples.size)
   println("mean sigma: " + samples.map(_.sigma).sum / samples.size)
+*/

@@ -3,20 +3,17 @@ package inferM.sampler
 import inferM.*
 
 import breeze.stats.{distributions => bdists}
-import scalagrad.api.ScalaGrad
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
+import scalagrad.api.forward.ForwardMode
 
 import inferM.RV.{LatentSample}
 import breeze.linalg.DenseVector
 import scalagrad.auto.breeze.BreezeDoubleMatrixAlgebra.given
 import scalagrad.api.matrixalgebra.MatrixAlgebra
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode
 import scalagrad.api.dual.DualColumnVector
 import scalagrad.auto.breeze.BreezeDoubleMatrixAlgebraDSL
 import scalagrad.api.matrixalgebra.MatrixAlgebraDSL
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
-import BreezeDoubleForwardMode.{algebraT as alg}
+import breeze.linalg.*
+import scalagrad.api.ScalaGrad
 
 /** Implementation of Hamiltonian Monte Carlo
   *
@@ -29,64 +26,55 @@ class HMC[A](using rng: breeze.stats.distributions.RandBasis)(
     initialValue: LatentSample[Double, DenseVector[Double]],
     epsilon: Double,
     numLeapfrog: Int
-) extends Sampler[A, alg.Scalar, alg.ColumnVector]:
+):
+
+  private val primaryAlg = BreezeDoubleMatrixAlgebraDSL
 
   /** Given values for the parameters (as a Map), the function returns a Map
     * with the same keys, but with the values replaced by the gradient
     */
-  def gradDensity(rv: RV[A, alg.Scalar, alg.ColumnVector]): (
-      latent: LatentSample[Double, DenseVector[Double]]
-  ) => LatentSample[Double, DenseVector[Double]] = latentSample =>
-    latentSample.map {
-      case (name, _: Double) =>
-        def density(s: alg.Scalar): alg.Scalar =
-          rv.logDensity(liftArgsToDual(latentSample).updated(name, s))
-        val grad: Double => Double = ScalaGrad.derive(density _)
-        val pointToEvalute = latentSample(name)
-        pointToEvalute match
-          case s: Double => (name, grad(s))
-          case _         => throw new Exception("Should not happen")
-      case (name, _: DenseVector[Double]) =>
-        def density(s: alg.ColumnVector): alg.Scalar =
-          rv.logDensity(liftArgsToDual(latentSample).updated(name, s))
-        val grad: DenseVector[Double] => DenseVector[Double] =
-          ScalaGrad.derive((density))
-        val pointToEvalute = latentSample(name)
-        pointToEvalute match
-          case v: DenseVector[Double] => (name, grad(v))
-          case _ => throw new Exception("Should not happen")
-    }
+  def gradDensity(rvF: (alg: MatrixAlgebraDSL) => RV[A, alg.Scalar, alg.ColumnVector]):
+    LatentSample[Double, DenseVector[Double]] => LatentSample[Double, DenseVector[Double]] = 
+      latentSample =>
+        latentSample.map {
+          case (name, s: Double) =>
+            def density(alg: MatrixAlgebraDSL)(s: alg.Scalar): alg.Scalar =
+              rvF(alg).logDensity(liftArgsToDual(alg)(latentSample).updated(name, s))
+            val grad: Double => Double = ForwardMode.derive(density)(primaryAlg)
+            (name, grad(s))
+          case (name, cv: DenseVector[Double]) =>
+            def density(alg: MatrixAlgebraDSL)(s: alg.ColumnVector): alg.Scalar =
+              rvF(alg).logDensity(liftArgsToDual(alg)(latentSample).updated(name, s))
+            val grad: DenseVector[Double] => DenseVector[Double] =
+              ForwardMode.derive(density)(primaryAlg)
+            (name, grad(cv))
+        }
 
-  def liftArgsToDual(
+  def liftArgsToDual(alg: MatrixAlgebraDSL)(
       latentSample: LatentSample[Double, DenseVector[Double]]
   ): LatentSample[alg.Scalar, alg.ColumnVector] =
     latentSample.map((name, value) =>
       value match
-        case s: Double => (name, alg.liftToScalar(s))
-        case v: DenseVector[Double] =>
-          (
-            name,
-            alg.createColumnVectorFromElements(
-              v.toScalaVector.map(alg.liftToScalar)
-            )
-          )
+        case s: Double => (name, alg.lift(s))
+        case v: DenseVector[Double] => (name, alg.lift(v))
     )
 
-  def sample(rv: RV[A, alg.Scalar, alg.ColumnVector]): Iterator[A] =
-    import alg.*
+  // def sample(rv: RV[A, alg.Scalar, alg.ColumnVector]): Iterator[A] =
+  def sample(rvF: (alg: MatrixAlgebraDSL) => RV[A, alg.Scalar, alg.ColumnVector]): Iterator[A] =
+    val rv = rvF(BreezeDoubleMatrixAlgebraDSL)
+
     def U = (latentSample: LatentSample[Double, DenseVector[Double]]) =>
-      val x = rv.logDensity(liftArgsToDual(latentSample))
-      x * alg.liftToScalar(-1.0)
+      val x = rv.logDensity(latentSample)
+      x * -1.0
 
     def gradU(
         current: LatentSample[Double, DenseVector[Double]]
     ): LatentSample[Double, DenseVector[Double]] =
-      gradDensity(rv)(current)
+      gradDensity(rvF)(current)
         .map(
           (name, value) => // make it negative, as U is also negated (see above)
             value match
-              case s: Double =>
-                (name, s * -1.0)
+              case s: Double => (name, s * -1.0)
               case v: DenseVector[Double] => (name, v * -1.0)
         )
 
@@ -104,7 +92,7 @@ class HMC[A](using rng: breeze.stats.distributions.RandBasis)(
                   (name, p: DenseVector[Double]),
                   (_, dUq: DenseVector[Double])
                 ) =>
-              (name, p -  dUq * epsilon/ 2.0)
+              (name, p -  dUq * epsilon / 2.0)
             case _ => throw new Exception("Should not happen")
           }
           .toMap
@@ -183,4 +171,4 @@ class HMC[A](using rng: breeze.stats.distributions.RandBasis)(
 
     Iterator
       .iterate(initialValue)(currentSample => oneStep(currentSample))
-      .map(params => rv.value(liftArgsToDual(params)))
+      .map(params => rv.value(params))

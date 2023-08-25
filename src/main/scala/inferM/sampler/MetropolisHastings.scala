@@ -2,23 +2,21 @@ package inferM.sampler
 
 import inferM.*
 import inferM.RV.{LatentSample}
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
 import breeze.linalg.DenseVector
 import scalagrad.api.matrixalgebra.MatrixAlgebra
 
 /** Implementation of the Metropolis Hastings algorithm
   */
-class MetropolisHastings[A, S, CV](
-    initialValue: LatentSample[S, CV],
-    proposal: LatentSample[S, CV] => LatentSample[S, CV]
+class MetropolisHastings[A](
+    initialValue: LatentSample[Double, DenseVector[Double]],
+    proposal: LatentSample[Double, DenseVector[Double]] => LatentSample[Double, DenseVector[Double]]
 )(using
-    alg: MatrixAlgebra[S, CV, _, _],
+    alg: MatrixAlgebra[Double, DenseVector[Double], _, _],
     rng: breeze.stats.distributions.RandBasis
-) extends Sampler[A, S, CV]:
-  def sample(rv: RV[A, S, CV]): Iterator[A] =
+):
+  def sample(rv: RV[A, Double, DenseVector[Double]]): Iterator[A] =
 
-    def liftSample(sample: LatentSample[S, CV]): LatentSample[S, CV] =
+    def liftSample(sample: LatentSample[Double, DenseVector[Double]]): LatentSample[Double, DenseVector[Double]] =
       sample.map {
         case (name, value: Double) => (name, alg.liftToScalar(value))
         case (name, value: DenseVector[Double @unchecked]) =>
@@ -32,9 +30,9 @@ class MetropolisHastings[A, S, CV](
       }
 
     def oneStep(
-        currentSample: LatentSample[S, CV],
-        newProposal: LatentSample[S, CV]
-    ): LatentSample[S, CV] =
+        currentSample: LatentSample[Double, DenseVector[Double]],
+        newProposal: LatentSample[Double, DenseVector[Double]]
+    ): LatentSample[Double, DenseVector[Double]] =
 
       val currentP = rv.logDensity(liftSample(currentSample))
       val newP = rv.logDensity(liftSample(newProposal))

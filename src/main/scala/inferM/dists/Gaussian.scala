@@ -17,7 +17,7 @@ import scalagrad.api.matrixalgebra.MatrixAlgebra
 class Gaussian[S, CV](mu: S, sdev: S)(using
     alg: MatrixAlgebra[S, CV, _, _],
     trig: Trig[S]
-) extends Dist[Double, S, CV]:
+) extends Dist[S, S, CV]:
 
   def logPdf(x: S): S =
     import alg.*
@@ -29,13 +29,13 @@ class Gaussian[S, CV](mu: S, sdev: S)(using
     val a = (x - mu) / sdev
     norm + alg.liftToScalar(-0.5) * a * a
 
-  def draw(): Double =
+  def draw(): S =
     val dist = bdists.Gaussian(alg.unliftToDouble(mu), alg.unliftToDouble(sdev))
-    dist.draw()
+    alg.liftToScalar(dist.draw())
 
-  def toRV(name: String): RV[Double, S, CV] =
-    RV[Double, S, CV](
-      s => alg.unliftToDouble(s(name).asInstanceOf[S]),
+  def toRV(name: String): RV[S, S, CV] =
+    RV(
+      s => s(name).asInstanceOf[S],
       s => logPdf(s(name).asInstanceOf[S])
     )
 
@@ -43,7 +43,7 @@ class MultivariateGaussian[S, CVec, RVec, M](mean: CVec, cov: M)(using
     alg: MatrixAlgebra[S, CVec, RVec, M],
     trig: Trig[S],
     nroot: NRoot[S]
-) extends MvDist[DenseVector[Double], S, CVec]:
+) extends MvDist[CVec, S, CVec]:
 
   def logPdf(x: CVec): S =
 
@@ -60,15 +60,14 @@ class MultivariateGaussian[S, CVec, RVec, M](mean: CVec, cov: M)(using
 
     alg.liftToScalar(-0.5) * centered.t * (precision * centered) + logNormalizer
 
-  def draw(): DenseVector[Double] =
+  def draw(): CVec =
     // TODO don't know how to unlift
-    // val dist = bdists.MultivariateGaussian(mean, cov.value)
-    // dist.draw()
-    ???
+    val dist = bdists.MultivariateGaussian(alg.unlift(mean), alg.unlift(cov))
+    alg.lift(dist.draw())
 
-  def toRV(name: String): RV[DenseVector[Double], S, CVec] =
+  def toRV(name: String): RV[CVec, S, CVec] =
     // TODO - unlift seems missing in scala-grad. But casting should work
     RV(
-      s => s(name).asInstanceOf[CVec].asInstanceOf[DenseVector[Double]],
+      s => s(name).asInstanceOf[CVec],
       s => logPdf(s(name).asInstanceOf[CVec])
     )

@@ -4,8 +4,6 @@ import breeze.stats.{distributions => bdists}
 import breeze.stats.distributions.Rand.FixedSeed.randBasis
 
 import scalagrad.api.ScalaGrad
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.{algebraT as alg}
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
 import inferM.RV.LatentSample
 import breeze.linalg.DenseVector
 import scalagrad.api.matrixalgebra.MatrixAlgebra
@@ -24,11 +22,6 @@ class RV[A, S, CV](
     val value: LatentSample[S, CV] => A,
     val logDensity: LatentSample[S, CV] => S
 )(using alg: MatrixAlgebra[S, CV, _, _]):
-
-  /** Generate samples
-    */
-  def sample(sampler: Sampler[A, S, CV]): Iterator[A] =
-    sampler.sample(this)
 
   /** Map the sampled values of the random variable with a function f (the
     * pushforward of the random variable)
