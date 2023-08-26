@@ -23,15 +23,15 @@ object LoadedCoin extends App:
   val data = bdists.Bernoulli(pGroundTruth).sample(100)
 
   val prior =
-    for p <- Uniform(alg.liftToScalar(0.0), alg.liftToScalar(1.0)).toRV("p")
+    for p <- Uniform(alg.lift(0.0), alg.lift(1.0)).toRV("p")
     yield p
 
   val likelihood = (p: Double) =>
-    val targetDist = Bernoulli(alg.liftToScalar(p))
+    val targetDist = Bernoulli(alg.lift(p))
 
     data.foldLeft(alg.zeroScalar)((sum, x) =>
       sum + targetDist.logPdf(
-        if x == false then alg.liftToScalar(0.0) else alg.liftToScalar(1.0)
+        if x == false then alg.lift(0.0) else alg.lift(1.0)
       )
     )
 

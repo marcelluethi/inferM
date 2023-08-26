@@ -7,6 +7,8 @@ import scalagrad.api.ScalaGrad
 import inferM.RV.LatentSample
 import breeze.linalg.DenseVector
 import scalagrad.api.matrixalgebra.MatrixAlgebra
+import scalagrad.api.matrixalgebra.MatrixAlgebraDSL
+import math.Fractional.Implicits.infixFractionalOps
 
 /** A random variable, described by the logDensity function, from which samples
   * of type S can be drawn.
@@ -18,10 +20,12 @@ import scalagrad.api.matrixalgebra.MatrixAlgebra
   * @tparam CV
   *   The ColumnVector type used (for autodiff)
   */
-class RV[A, S, CV](
-    val value: LatentSample[S, CV] => A,
-    val logDensity: LatentSample[S, CV] => S
-)(using alg: MatrixAlgebra[S, CV, _, _]):
+class RV[A, S: Fractional, CV](
+  val value: LatentSample[S, CV] => A,
+  val logDensity: LatentSample[S, CV] => S
+):
+
+  val self = this
 
   /** Map the sampled values of the random variable with a function f (the
     * pushforward of the random variable)
@@ -36,8 +40,7 @@ class RV[A, S, CV](
     */
   def flatMap[B](f: A => RV[B, S, CV]): RV[B, S, CV] = RV(
     latentSample => f(value(latentSample)).value(latentSample),
-    latentSample =>
-      f(value(latentSample)).logDensity(latentSample) + logDensity(latentSample)
+    latentSample => f(value(latentSample)).logDensity(latentSample) + logDensity(latentSample)
   )
 
   /** Create a new random variable (the posterior), using the current one as a

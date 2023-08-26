@@ -16,34 +16,25 @@ import scalagrad.api.matrixalgebra.MatrixAlgebra
 
 class Gaussian[S, CV](mu: S, sdev: S)(using
     alg: MatrixAlgebra[S, CV, _, _],
-    trig: Trig[S]
-) extends Dist[S, S, CV]:
+) extends Dist[Double, S, CV]:
 
   def logPdf(x: S): S =
-    import alg.*
-
-    val norm = trig.log(
-      alg
-        .liftToScalar(1.0) / (sdev * alg.liftToScalar(Math.sqrt(2.0 * Math.PI)))
+    val norm = alg.trig.log(
+      alg.lift(1.0) / (sdev * alg.lift(Math.sqrt(2.0 * Math.PI)))
     )
     val a = (x - mu) / sdev
-    norm + alg.liftToScalar(-0.5) * a * a
+    norm + alg.lift(-0.5) * a * a
 
-  def draw(): S =
-    val dist = bdists.Gaussian(alg.unliftToDouble(mu), alg.unliftToDouble(sdev))
-    alg.liftToScalar(dist.draw())
-
-  def toRV(name: String): RV[S, S, CV] =
-    RV(
-      s => s(name).asInstanceOf[S],
-      s => logPdf(s(name).asInstanceOf[S])
-    )
+  def draw(): Double =
+    bdists.Gaussian(mu.toDouble, sdev.toDouble).draw()
 
 class MultivariateGaussian[S, CVec, RVec, M](mean: CVec, cov: M)(using
     alg: MatrixAlgebra[S, CVec, RVec, M],
     trig: Trig[S],
     nroot: NRoot[S]
-) extends MvDist[CVec, S, CVec]:
+) extends MvDist[DenseVector[Double], S, CVec]:
+
+  import alg.given
 
   def logPdf(x: CVec): S =
 
@@ -53,17 +44,15 @@ class MultivariateGaussian[S, CVec, RVec, M](mean: CVec, cov: M)(using
     val k = mean.length
 
     val logNormalizer = trig.log(
-      alg.liftToScalar(Math.pow(Math.PI * 2, -k / 2.0)) * (alg.liftToScalar(
+      alg.lift(Math.pow(Math.PI * 2, -k / 2.0)) * (alg.lift(
         1.0
       ) / nroot.sqrt(cov.det))
     )
 
-    alg.liftToScalar(-0.5) * centered.t * (precision * centered) + logNormalizer
+    alg.lift(-0.5) * centered.t * (precision * centered) + logNormalizer
 
-  def draw(): CVec =
-    // TODO don't know how to unlift
-    val dist = bdists.MultivariateGaussian(alg.unlift(mean), alg.unlift(cov))
-    alg.lift(dist.draw())
+  def draw(): DenseVector[Double] =
+    bdists.MultivariateGaussian(alg.unlift(mean), alg.unlift(cov)).draw()
 
   def toRV(name: String): RV[CVec, S, CVec] =
     // TODO - unlift seems missing in scala-grad. But casting should work

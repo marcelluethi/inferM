@@ -16,18 +16,8 @@ class Bernoulli[S, CV](p: S)(using
 ) extends Dist[Boolean, S, CV]:
 
   def logPdf(x: S): S =
-    if (Math.abs(alg.unliftToDouble(x)) < 1e-5) then
-      alg.trig.log(alg.liftToScalar(1.0) - p)
+    if (Math.abs(x.toDouble) < 1e-5) then
+      alg.trig.log(alg.lift(1.0) - p)
     else alg.trig.log(p)
 
-  def draw(): Boolean =
-    val dist = bdists.Bernoulli(alg.unliftToDouble(p))
-    dist.draw()
-
-  def toRV(name: String): RV[Boolean, S, CV] =
-    def isCloseToZero(v: S) =
-      Math.abs(alg.unliftToDouble(v)) < 1e-10
-    RV(
-      s => if isCloseToZero(s(name).asInstanceOf[S]) then false else true,
-      s => logPdf(s(name).asInstanceOf[S])
-    )
+  def draw(): Boolean = bdists.Bernoulli(p.toDouble).draw()

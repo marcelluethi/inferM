@@ -16,11 +16,12 @@ import scalagrad.api.matrixalgebra.MatrixAlgebraDSL
 object MyGaussianOnGaussian extends App:
 
   def posteriorF(alg: MatrixAlgebraDSL): RV[(Double, Double), alg.Scalar, alg.ColumnVector] = {
+
     given MatrixAlgebra[alg.Scalar, alg.ColumnVector, _, _] = alg.innerAlgebra
 
     for {
-      x <- Gaussian(alg.liftToScalar(0.0), alg.liftToScalar(1.0)).toRV("x")
-      y <- Gaussian(x, alg.liftToScalar(0.1)).toRV("y")
+      x <- Gaussian(alg.lift(0.0), alg.lift(1.0)).toRV("x")
+      y <- Gaussian(x, alg.lift(0.1)).toRV("y")
     } yield (x.toDouble, y.toDouble)
   }
 

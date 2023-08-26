@@ -18,12 +18,12 @@ class MetropolisHastings[A](
 
     def liftSample(sample: LatentSample[Double, DenseVector[Double]]): LatentSample[Double, DenseVector[Double]] =
       sample.map {
-        case (name, value: Double) => (name, alg.liftToScalar(value))
+        case (name, value: Double) => (name, alg.lift(value))
         case (name, value: DenseVector[Double @unchecked]) =>
           (
             name,
             alg.createColumnVectorFromElements(
-              value.toScalaVector.map(alg.liftToScalar)
+              value.toScalaVector.map(alg.lift)
             )
           )
         case (_, _) => throw new Exception("Should not happen")

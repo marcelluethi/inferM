@@ -1,66 +1,68 @@
 package inferM.examples
-/*
+
 import inferM.*
 import inferM.dists.*
 import inferM.sampler.*
 
-import scalagrad.api.spire.trig.DualScalarIsTrig.given
 import spire.implicits.DoubleAlgebra
 import spire.compat.numeric
 import breeze.stats.{distributions => bdists}
 import breeze.stats.distributions.Rand.FixedSeed.randBasis
-import scalagrad.api.spire.numeric.DualScalarIsNumeric.given
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
-import BreezeDoubleForwardMode.{algebraT as alg}
+import scalagrad.api.matrixalgebra.MatrixAlgebra
+import scalagrad.api.matrixalgebra.MatrixAlgebraDSL
 
 object LinearRegression extends App:
 
-  // example data
-  val aGroundTruth = 3.0
-  val bGroundTruth = 2.0
-  val noiseSigma = 1.0
+    // example data
+    val aGroundTruth = 3.0
+    val bGroundTruth = 2.0
+    val noiseSigma = 1.0
 
-  val data = Seq
+    val data = Seq
     .range(0, 10)
     .map(x =>
-      (
+        (
         x.toDouble,
         aGroundTruth * x + bGroundTruth + bdists
-          .Gaussian(0.0, noiseSigma)
-          .sample()
-      )
+            .Gaussian(0.0, noiseSigma)
+            .sample()
+        )
     )
 
-  case class Parameters(a: Double, b: Double, sigma: Double)
+    case class Parameters[S](a: S, b: S, sigma: S)
 
-  val prior = for
-    a <- Gaussian(alg.lift(1.0), alg.lift(10)).toRV("a")
-    b <- Gaussian(alg.lift(2.0), alg.lift(10)).toRV("b")
-    sigma <- Exponential(alg.lift(1.0)).toRV("sigma")
-  yield Parameters(a, b, sigma)
+    def posteriorExpr(alg: MatrixAlgebraDSL): RV[Parameters[Double], alg.Scalar, alg.ColumnVector] =
 
-  val likelihood = (parameters: Parameters) =>
-    data.foldLeft(alg.zeroScalar)((sum, point) =>
-      val (x, y) = point
-      sum + Gaussian(
-        alg.lift(parameters.a) * alg.lift(x) + alg.lift(parameters.b),
-        alg.lift(parameters.sigma)
-      ).logPdf(alg.lift(y))
+        given MatrixAlgebra[alg.Scalar, alg.ColumnVector, _, _] = alg.innerAlgebra 
+
+        val prior = for
+            a <- Gaussian(alg.lift(1.0), alg.lift(10)).toRV("a")
+            b <- Gaussian(alg.lift(2.0), alg.lift(10)).toRV("b")
+            sigma <- Exponential(alg.lift(1.0)).toRV("sigma")
+        yield Parameters(a, b, sigma)
+
+        val likelihood = (parameters: Parameters[alg.Scalar]) =>
+            data.foldLeft(alg.zeroScalar)((sum, point) =>
+                val (x, y) = point
+                sum + Gaussian(
+                    parameters.a * alg.lift(x) + parameters.b,
+                    parameters.sigma
+                ).logPdf(alg.lift(y))
+        )
+
+        val posterior = prior.condition(likelihood)
+        
+        posterior.map(p => Parameters(p.a.toDouble, p.b.toDouble, p.sigma.toDouble))
+
+    // Sampling
+    val hmc = HMC[Parameters[Double]](
+        initialValue = Map("a" -> 1.0, "b" -> 0.0, "sigma" -> 1.0),
+        epsilon = 0.01,
+        numLeapfrog = 20
     )
 
-  val posterior = prior.condition(likelihood)
+    val samples = hmc.sample(posteriorExpr).drop(10_000).take(1000).toSeq
 
-  // Sampling
-  val hmc = HMC[Parameters](
-    initialValue = Map("a" -> 1.0, "b" -> 0.0, "sigma" -> 1.0),
-    epsilon = 0.1,
-    numLeapfrog = 20
-  )
-
-  val samples = posterior.sample(hmc).drop(10000).take(10000).toSeq
-
-  println("mean a: " + samples.map(_._1).sum / samples.size)
-  println("mean b: " + samples.map(_._2).sum / samples.size)
-  println("mean sigma: " + samples.map(_._3).sum / samples.size)
-*/
+    println("mean a: " + samples.map(_._1).sum / samples.size)
+    println("mean b: " + samples.map(_._2).sum / samples.size)
+    println("mean sigma: " + samples.map(_._3).sum / samples.size)

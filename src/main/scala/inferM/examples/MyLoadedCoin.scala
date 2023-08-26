@@ -21,7 +21,7 @@ object LoadedCoin extends App:
   val pGroundTruth = 0.8
   val data = bdists.Bernoulli(pGroundTruth).sample(100)
 
-  def posteriorF(alg: MatrixAlgebraDSL): RV[Double, alg.Scalar, alg.ColumnVector] = {
+  def posteriorExpr(alg: MatrixAlgebraDSL): RV[Double, alg.Scalar, alg.ColumnVector] = {
     given MatrixAlgebra[alg.Scalar, alg.ColumnVector, _, _] = alg.innerAlgebra
     
     // P(w)
@@ -30,8 +30,7 @@ object LoadedCoin extends App:
       yield p
 
     // P(D|w)
-    val likelihood = (p2: alg.Scalar) =>
-      val p = alg.lift(alg.unlift(p2)) // stop gradients => why?
+    val likelihood = (p: alg.Scalar) =>
       val targetDist = Bernoulli(p)
 
       data.foldLeft(alg.zeroScalar)((sum, x) =>
@@ -48,17 +47,17 @@ object LoadedCoin extends App:
   // Sampling
   val hmc = HMC[Double](
     initialValue = Map("p" -> 0.5),
-    epsilon = 0.05,
+    epsilon = 0.01,
     numLeapfrog = 20
   )
 
-  val samples = hmc.sample(posteriorF).take(1000).toSeq
-  println("mean p: " + samples.sum / samples.size)
+  val samples = hmc.sample(posteriorExpr).take(1000).toSeq
+  println("hmc   - mean p: " + samples.sum / samples.size)
 
-  /*val metro = MetropolisHastings[Double](
+  val metro = MetropolisHastings[Double](
     initialValue = Map("p" -> 0.5),
     proposal = x => x.updatedWith("p")(p => p.map(_.asInstanceOf[Double] + Gaussian(0.0, 0.1)(using BreezeDoubleMatrixAlgebra).draw())),
   )(using BreezeDoubleMatrixAlgebra)
 
-  val samples2 = metro.sample(posteriorF(BreezeDoubleMatrixAlgebraDSL)).take(1000).toSeq
-  println("mean p: " + samples2.sum / samples2.size)*/
+  val samples2 = metro.sample(posteriorExpr(BreezeDoubleMatrixAlgebraDSL)).take(1000).toSeq
+  println("metro - mean p: " + samples2.sum / samples2.size)

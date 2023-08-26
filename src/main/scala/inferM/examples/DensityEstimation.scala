@@ -25,18 +25,18 @@ object DensityEstimation extends App:
   case class Parameters(mu: Double, sigma: Double)
 
   val prior = for
-    mu <- Gaussian(alg.liftToScalar(0.0), alg.liftToScalar(10)).toRV("mu")
-    sigma <- Gaussian(alg.liftToScalar(1.0), alg.liftToScalar(1.0))
+    mu <- Gaussian(alg.lift(0.0), alg.lift(10)).toRV("mu")
+    sigma <- Gaussian(alg.lift(1.0), alg.lift(1.0))
       .toRV("sigma")
   yield Parameters(mu, sigma)
 
   val likelihood = (parameters: Parameters) =>
     val targetDist = Gaussian(
-      alg.liftToScalar(parameters.mu),
-      alg.liftToScalar(parameters.sigma)
+      alg.lift(parameters.mu),
+      alg.lift(parameters.sigma)
     )
     data.foldLeft(alg.zeroScalar)((sum, point) =>
-      sum + targetDist.logPdf(alg.liftToScalar(point))
+      sum + targetDist.logPdf(alg.lift(point))
     )
 
   val posterior = prior.condition(likelihood)

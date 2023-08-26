@@ -22,15 +22,8 @@ class Exponential[S, CV](lambda: S)(using
 
   def logPdf(x: S): S =
     import numeric.*
-    if x < alg.liftToScalar(0) then alg.liftToScalar(Double.NegativeInfinity)
-    else lambda * alg.liftToScalar(-1) * x + trig.log(lambda)
+    if x < alg.lift(0) then alg.lift(Double.NegativeInfinity)
+    else lambda * alg.lift(-1) * x + trig.log(lambda)
 
-  def draw(): Double =
-    val dist = bdists.Exponential(alg.unliftToDouble(lambda))
-    dist.draw()
-
-  def toRV(name: String): RV[Double, S, CV] =
-    RV(
-      s => alg.unliftToDouble(s(name).asInstanceOf[S]),
-      s => logPdf(s(name).asInstanceOf[S])
-    )
+  def draw(): Double = 
+    bdists.Exponential(alg.unlift(lambda)).draw()
