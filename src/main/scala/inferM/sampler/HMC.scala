@@ -13,7 +13,6 @@ import scalagrad.api.dual.DualColumnVector
 import scalagrad.auto.breeze.BreezeDoubleMatrixAlgebraDSL
 import scalagrad.api.matrixalgebra.MatrixAlgebraDSL
 import breeze.linalg.*
-import scalagrad.api.ScalaGrad
 
 /** Implementation of Hamiltonian Monte Carlo
   *

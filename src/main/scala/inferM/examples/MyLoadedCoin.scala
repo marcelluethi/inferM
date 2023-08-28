@@ -22,6 +22,7 @@ object LoadedCoin extends App:
   val data = bdists.Bernoulli(pGroundTruth).sample(100)
 
   def posteriorExpr(alg: MatrixAlgebraDSL): RV[Double, alg.Scalar, alg.ColumnVector] = {
+
     given MatrixAlgebra[alg.Scalar, alg.ColumnVector, _, _] = alg.innerAlgebra
     
     // P(w)

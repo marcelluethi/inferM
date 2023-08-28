@@ -3,7 +3,6 @@ package inferM
 import breeze.stats.{distributions => bdists}
 import breeze.stats.distributions.Rand.FixedSeed.randBasis
 
-import scalagrad.api.ScalaGrad
 import inferM.RV.LatentSample
 import breeze.linalg.DenseVector
 import scalagrad.api.matrixalgebra.MatrixAlgebra
