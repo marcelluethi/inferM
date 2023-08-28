@@ -8,6 +8,7 @@ import breeze.linalg.DenseVector
 import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode
 import BreezeDoubleForwardMode.given
 import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.{algebraT => alg}
+import breeze.linalg.DenseMatrix
 
 /** A distribution that can be sampled from and whose log-pdf can be computed
   */
@@ -24,14 +25,12 @@ trait Dist:
       )
     
 
-  //def transform(bij : Bijection[forwardAlg.Scalar, forwardAlg.ColumnVector]) : Dist[A]= ???
-    // new Dist[A, S, CV]:
-    //   def alg : MatrixAlgebra[S, CV, _, _] = forwardAlg
-    //   def logPdf(value: S): S = 
-
-    //     val f = ScalaGrad.derive[forwardAlg.Scalar, forwardAlg.Scalar](bij.inverse)
-    //     self.logPdf(bij.inverse(value)) * (value)
-    //   def value(v : S) : A = self.value(bij.apply(v))
+  def transform(bij : Bijection[alg.Scalar, alg.Scalar]) : Dist= 
+    new Dist:      
+      def logPdf(value: alg.Scalar): alg.Scalar = 
+        val dInv = ScalaGrad.derive(bij.inverse)
+        self.logPdf(bij.inverse(value)) + alg.trig.log(alg.lift(dInv(value.value)))
+      def value(v : alg.Scalar) : alg.Scalar = self.value(v)
 
 
 
@@ -46,4 +45,10 @@ trait MvDist:
           s => self.logPdf(s(name).asInstanceOf[alg.ColumnVector])
         )
 
-   // def transform(bij : Bijection[S, CV]) : Dist[A]= ???
+
+    def transform(bij : Bijection[alg.ColumnVector, alg.ColumnVector]) : MvDist = 
+      new MvDist:      
+        def logPdf(value: alg.ColumnVector): alg.Scalar = 
+          val dInv : DenseVector[Double] => DenseMatrix[Double] = ScalaGrad.derive(bij.inverse)
+          self.logPdf(bij.inverse(value)) + alg.trig.log(alg.lift(breeze.linalg.det(dInv(value.dv))))
+        def value(v : alg.ColumnVector) : alg.ColumnVector = self.value(v)

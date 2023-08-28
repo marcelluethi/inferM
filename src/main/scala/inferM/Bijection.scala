@@ -1,7 +1,13 @@
 package inferM
 
-import scalagrad.api.matrixalgebra.MatrixAlgebra
 
-trait Bijection[S, CV](using alg : MatrixAlgebra[S, CV, _, _]):
-  def apply(s: S): S
-  def inverse(a: S): S
+import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode
+import BreezeDoubleForwardMode.{algebraT => alg}
+
+trait Bijection[A, B] extends Function1[A, B]:
+  override def apply(s : A) : B = forward(s)
+  def forward(s: A): B
+  def inverse(a: B): A
+
+
+
