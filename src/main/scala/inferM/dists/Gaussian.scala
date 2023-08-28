@@ -13,8 +13,9 @@ import breeze.stats.distributions.Rand.FixedSeed.randBasis
 
 import breeze.linalg.DenseVector
 import scalagrad.api.matrixalgebra.MatrixAlgebra
+import org.apache.commons.math3.fraction.Fraction
 
-class Gaussian[S, CV](mu: S, sdev: S)(using
+class Gaussian[S: Fractional, CV](mu: S, sdev: S)(using
     alg: MatrixAlgebra[S, CV, _, _],
 ) extends Dist[Double, S, CV]:
 
@@ -27,6 +28,12 @@ class Gaussian[S, CV](mu: S, sdev: S)(using
 
   def draw(): Double =
     bdists.Gaussian(mu.toDouble, sdev.toDouble).draw()
+
+  def toNewRV(name: String)(using nameOf: ValueOf[name.type]): NewRV[S, S, CV, Tuple1[(name.type, S)]] =
+    NewRV(
+      s => s._1._2,
+      s => logPdf(s._1._2)
+    )
 
 class MultivariateGaussian[S, CVec, RVec, M](mean: CVec, cov: M)(using
     alg: MatrixAlgebra[S, CVec, RVec, M],
