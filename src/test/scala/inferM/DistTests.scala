@@ -20,6 +20,7 @@ import breeze.linalg.DenseVector
 import breeze.linalg.DenseMatrix
 import inferM.dists.MultivariateGaussian
 import breeze.numerics.exp
+import inferM.dists.Binomial
 //import inferM.dists.Bernoulli
 
 class MyTests extends munit.FunSuite:
@@ -97,10 +98,39 @@ class MyTests extends munit.FunSuite:
   }
 
 
+  test("can estimate the parameter of a binomial distribution") {
+
+    val pGt = 0.9
+    
+    val data = Seq.fill(20)(bdists.Binomial(1, pGt).sample())
+
+    
+    val rv = for 
+      p <- Uniform(alg.lift(0), alg.lift(1)).toRV("p")
+    yield p
+      
+    val likelihood = (p: alg.Scalar) =>
+      val targetDist = Binomial(1, p)
+      data.foldLeft(alg.zeroScalar)((sum, x) =>
+        sum + targetDist.logPdf(alg.lift(x))
+      )      
+
+    val post = rv.condition(likelihood)
+    val samples = post
+      .sample(HMC(Map("p" -> 0.5), 1e-2, 10))
+      .drop(500)
+      .take(10000)
+      .map(_.value)
+      .toSeq
+    val mean = samples.sum / samples.length
+    assert(Math.abs(pGt - mean) < 1e-1)
+    
+  }
+
 
   test("generates correct prior samples from a transformed gaussian distribution") {
 
-    val bijection = new Bijection:
+    val bijection = new Bijection[alg.Scalar, alg.Scalar]:
       import alg.*
       def forward(x: alg.Scalar): alg.Scalar = x * alg.liftToScalar(2) + alg.liftToScalar(4.0) 
       def inverse(x: alg.Scalar): alg.Scalar = (x - alg.liftToScalar(4.0)) / alg.liftToScalar(2)
