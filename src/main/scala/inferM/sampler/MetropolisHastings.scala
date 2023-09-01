@@ -15,7 +15,7 @@ class MetropolisHastings[A](
     proposal: LatentSampleDouble => LatentSampleDouble
 )(using rng: breeze.stats.distributions.RandBasis
 ) extends Sampler[A]:
-  def sample(rv: RV[A]): Iterator[A] =
+  def sample(rv: RV[A]): Iterator[Sample[A]] =
 
     def liftSample(sample: LatentSampleDouble): LatentSample =
       sample.map {
@@ -41,4 +41,6 @@ class MetropolisHastings[A](
       .iterate(initialValue)(currentSample =>
         oneStep(currentSample, proposal(currentSample))
       )
-      .map(params => rv.value(liftSample(params)))
+      .map(params => 
+        val paramsLifted = liftSample(params)
+        Sample(rv.value(paramsLifted), rv.logDensity(paramsLifted).value))

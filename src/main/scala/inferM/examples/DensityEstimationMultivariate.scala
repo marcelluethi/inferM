@@ -60,11 +60,11 @@ object DensityEstimationMultiVariate extends App:
   )
 
   val samples = posterior.sample(hmc).drop(500).take(1000).toSeq
-  val estimatedMean = samples.map(_.mu.value).reduce(_ + _) * (1.0 / samples.size)
+  val estimatedMean = samples.map(_.value.mu.value).reduce(_ + _) * (1.0 / samples.size)
   val estimatedSigma2 =
-    samples.map(_.sigma2.value).reduce(_ + _) * (1.0 / samples.size)
+    samples.map(_.value.sigma2.value).reduce(_ + _) * (1.0 / samples.size)
   val varSigma2 = samples
-    .map(_.sigma2.value)
+    .map(_.value.sigma2.value)
     .map(x => (x - estimatedSigma2) * (x - estimatedSigma2))
     .reduce(_ + _) * (1.0 / samples.size)
   println("mean " + estimatedMean)

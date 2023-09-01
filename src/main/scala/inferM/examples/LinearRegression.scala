@@ -60,6 +60,6 @@ object LinearRegression extends App:
 
   val samples = posterior.sample(hmc).drop(10000).take(10000).toSeq
 
-  println("mean a: " + samples.map(_._1.toDouble).sum / samples.size)
-  println("mean b: " + samples.map(_._2.toDouble).sum / samples.size)
-  println("mean sigma: " + samples.map(_._3.toDouble).sum / samples.size)
+  println("mean a: " + samples.map(_.value._1.toDouble).sum / samples.size)
+  println("mean b: " + samples.map(_.value._2.toDouble).sum / samples.size)
+  println("mean sigma: " + samples.map(_.value._3.toDouble).sum / samples.size)

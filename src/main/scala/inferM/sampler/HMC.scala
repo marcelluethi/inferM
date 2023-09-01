@@ -67,7 +67,7 @@ class HMC[A](using rng: breeze.stats.distributions.RandBasis)(
           )
     )
 
-  def sample(rv: RV[A]): Iterator[A] =
+  def sample(rv: RV[A]): Iterator[Sample[A]] =
     import alg.*
     def U = (latentSample: LatentSampleDouble) =>
       val x = rv.logDensity(liftArgsToDual(latentSample))
@@ -178,4 +178,6 @@ class HMC[A](using rng: breeze.stats.distributions.RandBasis)(
 
     Iterator
       .iterate(initialValue)(currentSample => oneStep(currentSample))
-      .map(params => rv.value(liftArgsToDual(params)))
+      .map(params => 
+        val paramsLifted = liftArgsToDual(params)
+        Sample(rv.value(paramsLifted), rv.logDensity(paramsLifted).value))

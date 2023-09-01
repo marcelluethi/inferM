@@ -23,7 +23,7 @@ class RV[A](
 
   /** Generate samples
     */
-  def sample(sampler: Sampler[A]): Iterator[A] =
+  def sample(sampler: Sampler[A]): Iterator[Sample[A]] =
     sampler.sample(this)
 
   /** Map the sampled values of the random variable with a function f (the

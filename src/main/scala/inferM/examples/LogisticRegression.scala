@@ -55,8 +55,8 @@ object LogisticRegression extends App:
 
   val samples = posterior.sample(hmc).drop(10000).take(10000).toSeq
 
-  println(for x <- data.map(_._1) yield (x, invlogit(samples.last.a * alg.lift(x) + samples.last.b).value.round))
+  println(for x <- data.map(_._1) yield (x, invlogit(samples.last.value.a * alg.lift(x) + samples.last.value.b).value.round))
 
-  println("mean a: " + samples.map(_._1.toDouble).sum / samples.size)
-  println("mean b: " + samples.map(_._2.toDouble).sum / samples.size)
+  println("mean a: " + samples.map(_.value._1.toDouble).sum / samples.size)
+  println("mean b: " + samples.map(_.value._2.toDouble).sum / samples.size)
   

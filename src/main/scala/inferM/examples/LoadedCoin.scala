@@ -45,4 +45,4 @@ object LoadedCoin extends App:
 
   val samples = posterior.sample(hmc).take(1000).toSeq
 
-  println("mean p: " + samples.map(_.value).sum / samples.size)
+  println("mean p: " + samples.map(_.value.toDouble).sum / samples.size)

@@ -34,7 +34,7 @@ def jointGaussian(): Unit =
 
   val samples = prior.sample(hmc).drop(1000).take(1000).toSeq
   
-  Chart(Map("x" -> samples.map(_._1.toDouble), "y" -> samples.map(_._2.toDouble)))
+  Chart(Map("x" -> samples.map(_.value._1.toDouble), "y" -> samples.map(_.value._2.toDouble)))
   .encode(
     Channel.X("x", FieldType.Quantitative),
     Channel.Y("y", FieldType.Quantitative)

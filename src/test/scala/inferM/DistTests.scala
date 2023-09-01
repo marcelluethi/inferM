@@ -29,7 +29,7 @@ class MyTests extends munit.FunSuite:
     val (a, b) = (2, 4)
     val uniform = Uniform(alg.liftToScalar(a), alg.liftToScalar(b)).toRV("x")
     val samples =
-      uniform.sample(HMC(Map("x" -> 0.0), 0.1, 10)).drop(1000).take(10000).map(_.toDouble).toSeq
+      uniform.sample(HMC(Map("x" -> 0.0), 0.1, 10)).drop(1000).take(10000).map(_.value.toDouble).toSeq
     val mean = samples.sum / samples.length
     val expectedMean = a + (b - a) / 2
     val variance =
@@ -47,7 +47,7 @@ class MyTests extends munit.FunSuite:
       .sample(HMC(Map("lambda" -> 1.0), 0.01, 10))
       .drop(1000)
       .take(10000)
-      .map(_.toDouble)
+      .map(_.value.toDouble)
       .toSeq
     val mean = samples.sum / samples.length
     val expectedMean = 1.0 / lambda
@@ -67,7 +67,7 @@ class MyTests extends munit.FunSuite:
       .sample(HMC(Map("x" -> 3.0), 1e-1, 10))
       .drop(5000)
       .take(100000)
-      .map(_.toDouble)
+      .map(_.value.toDouble)
       .toSeq
     val mean = samples.sum / samples.length
     val expectedMean = mu
@@ -89,7 +89,7 @@ class MyTests extends munit.FunSuite:
       .sample(HMC(Map("x" -> DenseVector(0.0, 0.0)), 1e-1, 10))
       .drop(5000)
       .take(100000)
-      .map(_.value)
+      .map(_.value.value)
       .toSeq
     val mean = samples.foldLeft(DenseVector(0.0, 0.0))((acc, v) => acc + v) * (1.0 /  samples.length)
 
@@ -120,7 +120,7 @@ class MyTests extends munit.FunSuite:
       .sample(HMC(Map("p" -> 0.5), 1e-2, 10))
       .drop(500)
       .take(10000)
-      .map(_.value)
+      .map(_.value.toDouble)
       .toSeq
     val mean = samples.sum / samples.length
     assert(Math.abs(pGt - mean) < 1e-1)
@@ -143,7 +143,7 @@ class MyTests extends munit.FunSuite:
       .sample(HMC(Map("x" -> 0.0), 1e-1, 10))
       .drop(5000)
       .take(100000)
-      .map(_.value)
+      .map(_.value.toDouble)
       .toSeq
     val mean = samples.sum / samples.length
     val expectedMean = 4.0    

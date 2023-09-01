@@ -47,5 +47,5 @@ object DensityEstimation extends App:
 
   val samples = posterior.sample(hmc).drop(1000).take(1000).toSeq
 
-  println("mean mu: " + samples.map(_.mu.toDouble).sum / samples.size)
-  println("mean sigma: " + samples.map(_.sigma.toDouble).sum / samples.size)
+  println("mean mu: " + samples.map(s => s.value.mu.toDouble).sum / samples.size)
+  println("mean sigma: " + samples.map(s => s.value.sigma.value).sum / samples.size)
