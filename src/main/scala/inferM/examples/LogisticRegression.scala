@@ -9,10 +9,10 @@ import spire.implicits.DoubleAlgebra
 import spire.compat.numeric
 import breeze.stats.{distributions => bdists}
 import breeze.stats.distributions.Rand.FixedSeed.randBasis
-import scalagrad.api.spire.numeric.DualScalarIsNumeric.given
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
-import BreezeDoubleForwardMode.{algebraT as alg}
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.derive as d
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.algebra.*  // import syntax
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.algebraDSL as alg
+
 
 object LogisticRegression extends App:
 
@@ -21,7 +21,7 @@ object LogisticRegression extends App:
   val bGroundTruth = 0.0
   
   def invlogit(x: alg.Scalar): alg.Scalar =
-    alg.liftToScalar(1.0) / (alg.liftToScalar(1.0) + alg.trig.exp(-x))
+    alg.lift(1.0) / (alg.lift(1.0) + alg.trig.exp(-x))
 
   val data = Seq.range(-50, 50).map(_ / 10.0).map(s => if s  < 3 then (s, 0) else (s, 1))
 

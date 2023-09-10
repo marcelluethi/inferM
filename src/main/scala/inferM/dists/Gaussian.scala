@@ -1,9 +1,9 @@
 package inferM.dists
 
 import inferM.*
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode
-import BreezeDoubleForwardMode.given
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.{algebraT => alg}
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.derive as d
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.algebra.*  // import syntax
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.algebraDSL as alg
 
 import breeze.stats.{distributions => bdists}
 import breeze.stats.distributions.Rand.FixedSeed.randBasis
@@ -25,7 +25,7 @@ class Gaussian(mu: alg.Scalar, sdev: alg.Scalar) extends Dist:
     norm + alg.lift(-0.5) * a * a
 
   def draw(): Double =
-    val dist = bdists.Gaussian(alg.unliftToDouble(mu), alg.unliftToDouble(sdev))
+    val dist = bdists.Gaussian(mu.value, sdev.value)
     dist.draw()
 
 class MultivariateGaussian(mean: alg.ColumnVector, cov: alg.Matrix) extends MvDist:

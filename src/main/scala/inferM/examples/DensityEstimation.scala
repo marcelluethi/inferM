@@ -10,10 +10,9 @@ import spire.implicits.DoubleAlgebra
 import breeze.stats.{distributions => bdists}
 import breeze.stats.distributions.Rand.FixedSeed.randBasis
 
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
-import BreezeDoubleForwardMode.{algebraT as alg}
-import scalagrad.api.matrixalgebra.MatrixAlgebra
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.derive as d
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.algebra.*  // import syntax
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.algebraDSL as alg
 
 object DensityEstimation extends App:
 
@@ -26,14 +25,14 @@ object DensityEstimation extends App:
   case class Parameters(mu: alg.Scalar, sigma: alg.Scalar)
 
   val prior = for
-    mu <- Gaussian(alg.liftToScalar(0.0), alg.liftToScalar(10)).toRV("mu")
-    sigma <- Exponential(alg.liftToScalar(1.0)).toRV("sigma")
+    mu <- Gaussian(alg.lift(0.0), alg.lift(10)).toRV("mu")
+    sigma <- Exponential(alg.lift(1.0)).toRV("sigma")
   yield Parameters(mu, sigma)
 
   val likelihood = (parameters: Parameters) =>
     val targetDist = Gaussian(parameters.mu, parameters.sigma)
     data.foldLeft(alg.zeroScalar)((sum, point) =>
-      sum + targetDist.logPdf(alg.liftToScalar(point))
+      sum + targetDist.logPdf(alg.lift(point))
     )
 
   val posterior = prior.condition(likelihood)

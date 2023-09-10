@@ -1,15 +1,14 @@
 package inferM.dists
 import inferM.Dist
 
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode
-import BreezeDoubleForwardMode.given
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.{algebraT => alg}
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.derive as d
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.algebra.*  // import syntax
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.algebraDSL as alg
 
 import breeze.stats.{distributions => bdists}
 import breeze.stats.distributions.Rand.FixedSeed.randBasis
 
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
-import scalagrad.api.matrixalgebra.MatrixAlgebra
+
 
 
 class Binomial(n : Integer, p: alg.Scalar) extends Dist:
@@ -19,10 +18,10 @@ class Binomial(n : Integer, p: alg.Scalar) extends Dist:
   def logPdf(x: alg.Scalar): alg.Scalar =
     // it is okay to use value here because the gradient as it does not make sense to do gradient based inference on discrete variables
     val k = x.value.toInt 
-    alg.trig.log(alg.liftToScalar(combinations(n, k).toInt)) + alg.trig.log(alg.num.pow(p, k)) + alg.trig.log(alg.num.pow(alg.lift(1.0) - p, n - k))
+    alg.trig.log(alg.lift(combinations(n, k).toInt)) + alg.trig.log(alg.num.pow(p, k)) + alg.trig.log(alg.num.pow(alg.lift(1.0) - p, n - k))
   
   def draw(): Int =
-    val dist = bdists.Binomial(n, alg.unliftToDouble(p))
+    val dist = bdists.Binomial(n, p.value)
     dist.draw()
 
 

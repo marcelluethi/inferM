@@ -51,9 +51,9 @@ lazy val root = (project in file("."))
       ("org.scalanlp" %% "breeze" % "2.1.0"),
       ("org.scalanlp" %% "breeze-natives" % "2.1.0"),
       ("ch.unibas.cs.gravis" %% "scaltair" % "0.2-SNAPSHOT"),
-      ("ch.benikm91"  %%  "scala-grad" % "0.0.1"),
-      ("ch.benikm91"  %%  "scala-grad-api" %"0.0.1"),
-      ("ch.benikm91"  %%   "scala-grad-auto-breeze" % "0.0.1"),
+      ("ch.benikm91"  %%  "scala-grad" % "0.9.0"),
+      ("ch.benikm91"  %%  "scala-grad-api" %"0.9.0"),
+      ("ch.benikm91"  %%   "scala-grad-auto-breeze" % "0.9.0"),
       "org.scalameta" %% "munit" % "0.7.29" % Test
     )
   )

@@ -11,9 +11,9 @@ import spire.compat.numeric
 import breeze.stats.{distributions => bdists}
 import breeze.stats.distributions.Rand.VariableSeed.randBasis
 
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
-import BreezeDoubleForwardMode.{algebraT as alg}
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.derive as d
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.algebra.*  // import syntax
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.algebraDSL as alg
 
 object LoadedCoin extends App:
 
@@ -22,7 +22,7 @@ object LoadedCoin extends App:
   val data = bdists.Bernoulli(pGroundTruth).sample(100)
 
   val prior =
-    for p <- Gaussian(alg.liftToScalar(0.5), alg.liftToScalar(1.0)).toRV("p")
+    for p <- Gaussian(alg.lift(0.5), alg.lift(1.0)).toRV("p")
     yield p
 
   val likelihood = (p: alg.Scalar) =>
@@ -30,7 +30,7 @@ object LoadedCoin extends App:
 
     data.foldLeft(alg.zeroScalar)((sum, x) =>
       sum + targetDist.logPdf(
-        if x then alg.liftToScalar(1.0) else alg.liftToScalar(0.0)
+        if x then alg.lift(1.0) else alg.lift(0.0)
       )
     )
 

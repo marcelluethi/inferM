@@ -2,9 +2,9 @@ package inferM.dists
 
 import inferM.*
 
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode
-import BreezeDoubleForwardMode.given
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.{algebraT => alg}
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.derive as d
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.algebra.*  // import syntax
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.algebraDSL as alg
 
 import spire.implicits.DoubleAlgebra
 import spire.algebra.Trig
@@ -24,6 +24,6 @@ class Exponential(lambda: alg.Scalar) extends Dist:
     else lambda * alg.lift(-1) * x + alg.trig.log(lambda)
 
   def draw(): Double =
-    val dist = bdists.Exponential(alg.unliftToDouble(lambda))
+    val dist = bdists.Exponential(lambda.value)
     dist.draw()
 

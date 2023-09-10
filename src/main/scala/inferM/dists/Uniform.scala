@@ -2,9 +2,9 @@ package inferM.dists
 
 import inferM.*
 
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode
-import BreezeDoubleForwardMode.given
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.{algebraT => alg}
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.derive as d
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.algebra.*  // import syntax
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.algebraDSL as alg
 
 import spire.implicits.DoubleAlgebra
 import spire.algebra.Trig
@@ -18,9 +18,9 @@ class Uniform(from: alg.Scalar, to: alg.Scalar) extends Dist:
   def value(v : alg.Scalar) = v
 
   def logPdf(x: alg.Scalar): alg.Scalar =
-    if x.value >= from.value && x.value <= to.value then alg.trig.log(alg.liftToScalar(1.0) / (to - from))
-    else alg.liftToScalar(Double.MinValue)
+    if x.value >= from.value && x.value <= to.value then alg.trig.log(alg.lift(1.0) / (to - from))
+    else alg.lift(Double.MinValue)
 
   def draw(): Double =
-    val dist = bdists.Uniform(alg.unliftToDouble(from), alg.unliftToDouble(to))
+    val dist = bdists.Uniform(from.value, to.value)
     dist.draw()

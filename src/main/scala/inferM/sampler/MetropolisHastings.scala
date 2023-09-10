@@ -2,9 +2,9 @@ package inferM.sampler
 
 import inferM.*
 import inferM.RV.{LatentSample, LatentSampleDouble}
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode
-import BreezeDoubleForwardMode.given
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.{algebraT => alg}
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.derive as d
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.algebra.*  // import syntax
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.algebraDSL as alg
 import breeze.linalg.DenseVector
 import scalagrad.api.matrixalgebra.MatrixAlgebra
 

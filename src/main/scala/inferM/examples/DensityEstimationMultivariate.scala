@@ -10,11 +10,9 @@ import spire.compat.numeric
 import breeze.stats.{distributions => bdists}
 import breeze.stats.distributions.Rand.FixedSeed.randBasis
 
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
-import scalagrad.api.spire.numeric.DualScalarIsNumeric.given
-import scalagrad.api.spire.trig.DualScalarIsTrig.given
-import BreezeDoubleForwardMode.{algebraT as alg}
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.derive as d
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.algebra.*  // import syntax
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.algebraDSL as alg
 
 import breeze.linalg.DenseVector
 import breeze.linalg.DenseMatrix

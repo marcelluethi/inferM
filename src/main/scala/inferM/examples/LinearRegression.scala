@@ -4,15 +4,13 @@ import inferM.*
 import inferM.dists.*
 import inferM.sampler.*
 
-import scalagrad.api.spire.trig.DualScalarIsTrig.given
 import spire.implicits.DoubleAlgebra
 import spire.compat.numeric
 import breeze.stats.{distributions => bdists}
 import breeze.stats.distributions.Rand.FixedSeed.randBasis
-import scalagrad.api.spire.numeric.DualScalarIsNumeric.given
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
-import BreezeDoubleForwardMode.{algebraT as alg}
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.derive as d
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.algebra.*  // import syntax
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.algebraDSL as alg
 
 object LinearRegression extends App:
 

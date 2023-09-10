@@ -6,12 +6,13 @@ import inferM.RV.{LatentSample, LatentSampleDouble}
 import breeze.linalg.DenseVector
 
 import breeze.stats.{distributions => bdists}
-import scalagrad.api.ScalaGrad
 
 
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode
-import BreezeDoubleForwardMode.given
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.{algebraT => alg}
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.derive as d
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.algebra.*  // import syntax
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.algebraDSL as alg
+import scalagrad.api.forward.ForwardMode
+import scalagrad.auto.breeze.BreezeDoubleMatrixAlgebraDSL
 
 /** Implementation of Hamiltonian Monte Carlo
   *
@@ -36,7 +37,7 @@ class HMC[A](using rng: breeze.stats.distributions.RandBasis)(
       case (name, _: Double) =>
         def density(s: alg.Scalar): alg.Scalar =
           rv.logDensity(liftArgsToDual(latentSample).updated(name, s))
-        val grad: Double => Double = ScalaGrad.derive(density _)
+        val grad: Double => Double = d(density _)
         val pointToEvalute = latentSample(name)
         pointToEvalute match
           case s: Double => (name, grad(s))
@@ -45,7 +46,7 @@ class HMC[A](using rng: breeze.stats.distributions.RandBasis)(
         def density(s: alg.ColumnVector): alg.Scalar =
           rv.logDensity(liftArgsToDual(latentSample).updated(name, s))
         val grad: DenseVector[Double] => DenseVector[Double] =
-          ScalaGrad.derive((density))
+          d(density)
         val pointToEvalute = latentSample(name)
         pointToEvalute match
           case v: DenseVector[Double] => (name, grad(v))
@@ -57,12 +58,12 @@ class HMC[A](using rng: breeze.stats.distributions.RandBasis)(
   ): LatentSample =
     latentSample.map((name, value) =>
       value match
-        case s: Double => (name, alg.liftToScalar(s))
+        case s: Double => (name, alg.lift(s))
         case v: DenseVector[Double] =>
           (
             name,
             alg.createColumnVectorFromElements(
-              v.toScalaVector.map(alg.liftToScalar)
+              v.toScalaVector.map(alg.lift)
             )
           )
     )
@@ -71,7 +72,7 @@ class HMC[A](using rng: breeze.stats.distributions.RandBasis)(
     import alg.*
     def U = (latentSample: LatentSampleDouble) =>
       val x = rv.logDensity(liftArgsToDual(latentSample))
-      x * alg.liftToScalar(-1.0)
+      x * alg.lift(-1.0)
 
     def gradU(
         current: LatentSampleDouble

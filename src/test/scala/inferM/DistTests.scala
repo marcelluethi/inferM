@@ -10,8 +10,9 @@ import scalagrad.api.matrixalgebra.MatrixAlgebraDSL
 import scalagrad.api.spire.numeric.DualScalarIsNumeric.given
 import scalagrad.api.spire.trig.DualScalarIsTrig.given
 import scalagrad.api.spire.trig.DualScalarIsTrig.given
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.given
-import scalagrad.auto.forward.breeze.BreezeDoubleForwardMode.{algebraT as alg}
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.derive as d
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.algebra.*  // import syntax
+import scalagrad.auto.forward.BreezeDoubleForwardDualMode.algebraDSL as alg
 import spire.algebra.NRoot
 import spire.algebra.Trig
 import spire.compat.given
@@ -27,7 +28,7 @@ class MyTests extends munit.FunSuite:
   test("generates correct prior samples from uniform distribution") {
 
     val (a, b) = (2, 4)
-    val uniform = Uniform(alg.liftToScalar(a), alg.liftToScalar(b)).toRV("x")
+    val uniform = Uniform(alg.lift(a), alg.lift(b)).toRV("x")
     val samples =
       uniform.sample(HMC(Map("x" -> 0.0), 0.1, 10)).drop(1000).take(10000).map(_.value.toDouble).toSeq
     val mean = samples.sum / samples.length
@@ -42,7 +43,7 @@ class MyTests extends munit.FunSuite:
 
   test("generates correct prior samples from an exponential distribution") {
     val lambda = 2.0
-    val exponential = Exponential(alg.liftToScalar(lambda)).toRV("lambda")
+    val exponential = Exponential(alg.lift(lambda)).toRV("lambda")
     val samples = exponential
       .sample(HMC(Map("lambda" -> 1.0), 0.01, 10))
       .drop(1000)
@@ -62,7 +63,7 @@ class MyTests extends munit.FunSuite:
     val mu = 5.0
     val sigma = 2.0
     val gaussian =
-      Gaussian(alg.liftToScalar(mu), alg.liftToScalar(sigma)).toRV("x")
+      Gaussian(alg.lift(mu), alg.lift(sigma)).toRV("x")
     val samples = gaussian
       .sample(HMC(Map("x" -> 3.0), 1e-1, 10))
       .drop(5000)
@@ -132,10 +133,10 @@ class MyTests extends munit.FunSuite:
 
     val bijection = new Bijection[alg.Scalar, alg.Scalar]:
       import alg.*
-      def forward(x: alg.Scalar): alg.Scalar = x * alg.liftToScalar(2) + alg.liftToScalar(4.0) 
-      def inverse(x: alg.Scalar): alg.Scalar = (x - alg.liftToScalar(4.0)) / alg.liftToScalar(2)
+      def forward(x: alg.Scalar): alg.Scalar = x * alg.lift(2) + alg.lift(4.0) 
+      def inverse(x: alg.Scalar): alg.Scalar = (x - alg.lift(4.0)) / alg.lift(2)
 
-    val origGaussian =  Gaussian(alg.liftToScalar(0), alg.liftToScalar(1))
+    val origGaussian =  Gaussian(alg.lift(0), alg.lift(1))
     val transformedGaussian = origGaussian.transform(bijection)
     
     val rv = transformedGaussian.toRV("x")    
